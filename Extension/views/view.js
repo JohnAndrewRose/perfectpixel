@@ -84,6 +84,19 @@ function Ball(svg, x, y, id, color, aoa, weight) {
         lastMouseY = e.pageY;
     });
 
+    document.addEventListener('click', function(e) {
+        if(thisobj.lastIsUnderMouse) {
+            e.stopPropagation();
+            e.preventDefault();
+            thisobj.Remove();
+            var index = balls.indexOf(thisobj);
+            balls = balls.filter(function(elem, _index){
+                return index != _index;
+            });
+            return false;
+        }
+    }, true);
+
     this.Draw = function () {
         var svg = thisobj.svg;
         var ball = svg.selectAll('#' + thisobj.id)
@@ -103,6 +116,15 @@ function Ball(svg, x, y, id, color, aoa, weight) {
         var intersectBall = ball.enter()
                             .append('circle')
                             .attr({ 'id': thisobj.id + '_intersect', 'class': 'intersectBall' });
+    }
+
+    this.Remove = function () {
+        var svg = thisobj.svg;
+        var ball = svg.selectAll('#' + thisobj.id)
+                    .data(thisobj.data)
+        ball.transition()
+            .duration(500)
+            .attr('r', 0);
     }
 
     this.Move = function () {
