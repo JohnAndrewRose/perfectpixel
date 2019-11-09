@@ -22,8 +22,12 @@
  */
 var svg = null;
 var balls = []; // global array representing balls
+var offsetHeight = 0;
+var offsetLeft = 0;
 var color = d3.scale.category20();
 var startStopFlag = null;
+var lastMouseX = 0;
+var lastMouseY = 0;
 // I always like to handle ESC key
 d3.select('body')
 .on('keydown', function () {
@@ -74,6 +78,12 @@ function Ball(svg, x, y, id, color, aoa, weight) {
         thisobj.Draw();
     }
 
+    document.addEventListener('mousemove', function(e)
+    {
+        lastMouseX = e.pageX;
+        lastMouseY = e.pageY;
+    });
+
     this.Draw = function () {
         var svg = thisobj.svg;
         var ball = svg.selectAll('#' + thisobj.id)
@@ -100,6 +110,35 @@ function Ball(svg, x, y, id, color, aoa, weight) {
 
         //thisobj.posX += Math.cos(thisobj.aoa) * thisobj.jumpSize;
         //thisobj.posY += Math.sin(thisobj.aoa) * thisobj.jumpSize;
+
+        var isUnderMouse = false;
+        var x = lastMouseX;
+        var y = lastMouseY;
+        // do what you want with x and y
+        var a = x - (thisobj.posX + offsetLeft);
+        var b = y - thisobj.posY;
+        var c = Math.sqrt( a*a + b*b );
+        if(c < thisobj.radius) {
+            isUnderMouse = true;
+        } else {
+            isUnderMouse = false;
+        }
+
+        if(thisobj.lastIsUnderMouse != isUnderMouse) {
+            if(isUnderMouse) {
+                thisobj.lastVx = thisobj.vx;
+                thisobj.lastVy = thisobj.vy;
+                thisobj.lastWeight = thisobj.weight;
+                thisobj.vx = 0;
+                thisobj.vy = 0;
+                thisobj.weight = 1000000;
+            } else if(thisobj.lastIsUnderMouse) {
+                thisobj.vx = thisobj.lastVx;
+                thisobj.vy = thisobj.lastVy;
+                thisobj.weight = thisobj.lastWeight;
+            }
+            thisobj.lastIsUnderMouse = isUnderMouse;
+        }
 
         thisobj.posX += thisobj.vx;
         thisobj.posY += thisobj.vy;
@@ -772,6 +811,8 @@ var PanelView = Backbone.View.extend({
         var test = d3.select("#" + containerId);
         var height = test[0][0].clientHeight; //document.getElementById(containerId).clientHeight;
         var width = test[0][0].clientWidth; //document.getElementById(containerId).clientWidth;
+        offsetHeight = test[0][0].offsetHeight;
+        offsetLeft = test[0][0].offsetLeft;
         gContainerId = containerId;
         gCanvasId = containerId + '_canvas';
         gTopGroupId = containerId + '_topGroup';
