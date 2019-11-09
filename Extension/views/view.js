@@ -769,8 +769,9 @@ var PanelView = Backbone.View.extend({
     },
 
     _initializeD3: function(containerId) {
-        var height = 500; //document.getElementById(containerId).clientHeight;
-        var width = 500; //document.getElementById(containerId).clientWidth;
+        var test = d3.select("#" + containerId);
+        var height = test[0][0].clientHeight; //document.getElementById(containerId).clientHeight;
+        var width = test[0][0].clientWidth; //document.getElementById(containerId).clientWidth;
         gContainerId = containerId;
         gCanvasId = containerId + '_canvas';
         gTopGroupId = containerId + '_topGroup';
