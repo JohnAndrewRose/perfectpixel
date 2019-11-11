@@ -25,7 +25,7 @@
     "name":"__MSG_extension_name__",
     "manifest_version":2,
     "options_page":"fancy-settings/source/index.html",
-    "permissions":[ "tabs", "\u003Call_urls\u003E", "unlimitedStorage", "cookies", "*://*.youtube.com" ],
+    "permissions":[ "tabs", "\u003Call_urls\u003E", "unlimitedStorage", "cookies"],
     "update_url":"http://clients2.google.com/service/update2/crx",
     "version":"1.77",
     "web_accessible_resources":[

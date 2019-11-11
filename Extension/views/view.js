@@ -108,13 +108,25 @@ d3.select('body')
         ball.enter()
             .append("circle")
             .attr({ "id": thisobj.id, 'class': 'ball', 'r': thisobj.radius, 'weight': thisobj.weight })
-            .style("fill", thisobj.color)
+            .style("fill", "url(#image)")
             ;
         ball
             //.transition()//.duration(50)
             .attr("cx", thisobj.posX)
             .attr("cy", thisobj.posY)
             ;
+
+        if(this.hasImage) {
+            var imgs = thisobj.svg.selectAll("image").data([0]);
+            imgs.enter()
+            .append("svg:image")
+            .attr("xlink:href", thisobj.imageUrl)
+            .attr("x", thisobj.posX - thisobj.radius)
+            .attr("y", thisobj.posY - thisobj.radius)
+            .attr("width", 2*thisobj.radius)
+            .attr("height", 2*thisobj.radius);
+            }
+
         // intersect ball is used to show collision effect - every ball has it's own intersect ball
         var intersectBall = ball.enter()
             .append('circle')
@@ -135,11 +147,21 @@ d3.select('body')
     var ballPlasticityConstant = 1;
 
     this.Impulse = function (upwardImpulseStrength) {
-        if(upwardImpulseStrength > 100) {
-            upwardImpulseStrength = 100;
+        if(upwardImpulseStrength > 200) {
+            upwardImpulseStrength = 200;
         }
         thisobj.vy -= upwardImpulseStrength / secondsToImpulseConversionConstant;
         thisobj.isBallAtRest = false;
+    }
+
+    this.addImageIfNone = function(imageUrl) {
+        if(!this.hasImage) {
+            this.imageUrl = imageUrl;
+            this.hasImage = true;
+            return true;
+        } else {
+            return false;
+        }
     }
 
     this.Move = function () {
@@ -359,6 +381,7 @@ var PanelView = Backbone.View.extend({
     screenBordersElementId: 'chromeperfectpixel-window',
     panelUpdatedFirstTime: true,
     _isFrozen: false,
+    globalImageUrl: null,
 
     events: {
         'click .chromeperfectpixel-showHideBtn': 'toggleOverlayShown',
@@ -714,15 +737,96 @@ var PanelView = Backbone.View.extend({
     },
 
     render: function () {
-        $('body').append(this.$el).append('<div id="' + this.screenBordersElementId + '"/>');
+
+
+        var windowHtml = 
+        '<div id="' + this.screenBordersElementId + '">' +
+        '<svg id="mySvg" width="0" height="0">' +
+        '<defs id="mdef">' +
+        '<pattern id="image" x="0" y="0" height="40" width="40">' +
+        '<image id="imageId" x="0" y="0" width="40" height="40"></image>' +
+        '</pattern>' +
+        '</defs>' +
+        '</svg>' +
+        '</div>';
+
+
+        $('body').append(this.$el).append(windowHtml);
         this.$el.css('background', 'url(' + ExtensionService.getResourceUrl('images/noise.jpg') + ')');
         this.$el.addClass(ExtensionService.getLocalizedMessage("panel_css_class"));
 
-        //var panelHtml =
-        //'<div id="drawArea" style="width:100px; height:100px; border:1px transparent gray">';
+        var panelHtml =
 
-        //this.$el.append(panelHtml);
+        '<div id="chromeperfectpixel-dropzone-decorator"></div>' +
+        '<div id="chromeperfectpixel-panel-header">' +
+        '<div id="chromeperfectpixel-header-logo" style="background:url(' + ExtensionService.getResourceUrl("images/icons/16.png") + ') center center no-repeat;" title="' + ExtensionService.getLocalizedMessage("toggle_collapsed_mode") + '"></div>' +
+        '<h1>' + ExtensionService.getLocalizedMessage("extension_name_short") + '</h1>' +
+        '</div>' +
+        '<div id="chromeperfectpixel-min-buttons">' +
+        '<div class="chromeperfectpixel-min-showHideBtn"></div>' +
+        '<div class="chromeperfectpixel-min-lockBtn"></div>' +
+        '</div>' +
+        '<div id="chromeperfectpixel-panel-body">' +
 
+        '<div id="chromeperfectpixel-notification-box">' +
+        '<div id="chromeperfectpixel-notification-text"></div>' +
+        '<div id="chromeperfectpixel-closeNotification">x</div>' +
+        '</div>' +
+
+        '<div id="chromeperfectpixel-section">'+
+        '<div id="chromeperfectpixel-section-opacity">' +
+        '<span>' + ExtensionService.getLocalizedMessage("opacity") + ':</span>' +
+        '<input type="range" id="chromeperfectpixel-opacity" min="0" max="1" step="0.01" value="0.5" />' +
+        '</div>' +
+
+        '<div id="chromeperfectpixel-section-origin">' +
+        '<span>' + ExtensionService.getLocalizedMessage("origin") + ':</span>' +
+        '<div id="chromeperfectpixel-origin-controls">' +
+        '<button id="chromeperfectpixel-ymore" data-axis="y" data-offset="-1">&darr;</button>' +
+        '<button id="chromeperfectpixel-yless" data-axis="y" data-offset="1">&uarr;</button>' +
+        '<button id="chromeperfectpixel-xless" data-axis="x" data-offset="1">&larr;</button>' +
+        '<button id="chromeperfectpixel-xmore" data-axis="x" data-offset="-1">&rarr;</button>' +
+        '<div>' +
+        '<div>' +
+
+        '<div class="chromeperfectpixel-coords-label">X:</div>' +
+        '<input type="text" class="chromeperfectpixel-coords" data-axis="x" id="chromeperfectpixel-coordX" value="50" size="2" maxlength="4"/>' +
+        '</div>' +
+
+        '<div>' +
+        '<div class="chromeperfectpixel-coords-label">Y:</div>' +
+        '<input type="text" class="chromeperfectpixel-coords" data-axis="y" id="chromeperfectpixel-coordY" value="50" size="2" maxlength="4"/>' +
+        '</div>' +
+        '</div>' +
+        '</div>' +
+        '</div>' +
+
+        '<div>' + ExtensionService.getLocalizedMessage("layers") + ':</div>' +
+        '<div id="chromeperfectpixel-section-scale">' +
+        '<div id="chromeperfectpixel-section-scale-label">' + ExtensionService.getLocalizedMessage("scale") + ':</div>' +
+        '<input type="number" id="chromeperfectpixel-scale" value="1.0" size="3" min="0.1" max="10" step="0.1"/>' +
+        '</div>' +
+        '<div id="chromeperfectpixel-layers">' +
+            '<div id="chromeperfectpixel-layers-add-btn" class="chromeperfectpixel-layers-btn">' +
+                '<div class="chromeperfectpixel-layers-btn-text">' + ExtensionService.getLocalizedMessage("add_new_layer_top") + '</div>' +
+            '</div>' +
+        '</div>' +
+
+        '<div id="chromeperfectpixel-progressbar-area" style="display: none">' + ExtensionService.getLocalizedMessage("loading")  + '...</div>' +
+
+        '<div id="chromeperfectpixel-buttons">' +
+        '<button class="chromeperfectpixel-showHideBtn" title="Hotkey: Alt + S" style="margin-right: 5px; float:left;">' + ExtensionService.getLocalizedMessage("show") + '</button>' +
+        '<button class="chromeperfectpixel-lockBtn" title="Hotkey: Alt + C" style="margin-right: 5px; float:left;">' + ExtensionService.getLocalizedMessage("lock") + '</button>' +
+        '<button class="chromeperfectpixel-invertcolorsBtn" title="Hotkey: Alt + I" style="margin-right: 5px; float:left;">' + ExtensionService.getLocalizedMessage("invert_colors") + '</button>' +
+        '<div id="chromeperfectpixel-upload-area">' +
+        '<button id="chromeperfectpixel-fakefile">' + ExtensionService.getLocalizedMessage("add_new_layer") + '</button>' +
+        '<span><input id="chromeperfectpixel-fileUploader" type="file" accept="image/*" /></span>' +
+        '</div>' +
+        '</div>' +
+        '</div>' +
+        '</div>';
+
+    this.$el.append(panelHtml);
         if (this.options.state == 'collapsed') {
             $panel_body.hide().addClass('collapsed');
             $panel.css('right', (30 - $panel.width()) + 'px');
@@ -878,6 +982,7 @@ var PanelView = Backbone.View.extend({
             .style("fill", "none")
             //.attr("transform", "translate(" + 1 + "," + 1 + ")")
             ;
+
 
         balls.push(new Ball(svg, 201, 201, 'n3', Math.PI / 9, 45));
 
@@ -1123,14 +1228,23 @@ var OverlayView = Backbone.View.extend({
     },
 
     updateOverlay: function () {
-        var width = this.model.get('width') * this.model.get('scale');
-        this.$el.css('width', width + 'px')
-            .css('left', this.model.get('x') + 'px')
-            .css('top', this.model.get('y') + 'px')
-            .css('opacity', this.model.get('opacity'));
+        // var width = this.model.get('width') * this.model.get('scale');
+        // this.$el.css('width', width + 'px')
+        //     .css('left', this.model.get('x') + 'px')
+        //     .css('top', this.model.get('y') + 'px')
+        //     .css('opacity', this.model.get('opacity'));
         this.model.image.getImageUrlAsync($.proxy(function (imageUrl) {
-            imageUrl && this.$el.attr('src', imageUrl);
+            this.globalImageUrl = imageUrl;
+            $("#imageId").attr("xlink:href",imageUrl);
+            if(imageUrl) {
+                for (var i = 0; i < balls.length; ++i) {
+                    if(balls[i].addImageIfNone(imageUrl))
+                        continue;
+                }
+            }
         }, this));
+
+
     },
 
     setLocked: function (value) {
