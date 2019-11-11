@@ -39,16 +39,20 @@ d3.select('body')
         }
     });
 
-function Ball(svg, x, y, id, aoa, weight) {
-    this.posX = x; // cx
-    this.posY = y; // cy
-    this.color = color;
+    function Ball(svg, x, y, id, aoa, weight) {
+        this.isBallAtRest = true;
     this.radius = weight; // radius and weight same
+    //this.posX = x; // cx
+    //this.posY = y; // cy
+    this.posX = parseInt(svg.attr('width')) - this.radius - 1;
+    this.posY = parseInt(svg.attr('height')) - this.radius - 1; // always start on bottom of screen
+    this.color = color;
     this.jumpSize = 0; // equivalent of speed default to 1
     this.svg = svg; // parent SVG
     this.id = id; // id of ball
     this.aoa = aoa; // initial angle of attack
     this.weight = weight;
+    this.elasticPotentialEnergy = 0;
 
     if (!this.aoa)
         this.aoa = Math.PI / 7;
@@ -79,8 +83,8 @@ function Ball(svg, x, y, id, aoa, weight) {
     }
 
     document.addEventListener('mousemove', function (e) {
-        lastMouseX = e.pageX;
-        lastMouseY = e.pageY;
+        lastMouseX = e.x;
+        lastMouseY = e.y;
     });
 
     document.addEventListener('click', function (e) {
@@ -103,7 +107,7 @@ function Ball(svg, x, y, id, aoa, weight) {
             ;
         ball.enter()
             .append("circle")
-            .attr({ "id": thisobj.id, 'class': 'ball bubble', 'r': thisobj.radius, 'weight': thisobj.weight })
+            .attr({ "id": thisobj.id, 'class': 'ball', 'r': thisobj.radius, 'weight': thisobj.weight })
             .style("fill", thisobj.color)
             ;
         ball
@@ -126,14 +130,23 @@ function Ball(svg, x, y, id, aoa, weight) {
             .attr('r', 0);
     }
 
-    this.Impulse = function (upwardImpulseStrength) {
-        thisobj.vy += upwardImpulseStrength / 100;
-    }
+    var secondsToImpulseConversionConstant = 10;
+    var globalGravityConstant = 0.5;
+    var ballPlasticityConstant = 1;
 
-    var globalGravityConstant = -0.01;
+    this.Impulse = function (upwardImpulseStrength) {
+        if(upwardImpulseStrength > 100) {
+            upwardImpulseStrength = 100;
+        }
+        thisobj.vy -= upwardImpulseStrength / secondsToImpulseConversionConstant;
+        thisobj.isBallAtRest = false;
+    }
 
     this.Move = function () {
         var svg = thisobj.svg;
+
+        if(!thisobj.isBallAtRest && !thisobj.lastIsUnderMouse)
+            this.vy += globalGravityConstant;
 
         //thisobj.posX += Math.cos(thisobj.aoa) * thisobj.jumpSize;
         //thisobj.posY += Math.sin(thisobj.aoa) * thisobj.jumpSize;
@@ -185,7 +198,12 @@ function Ball(svg, x, y, id, aoa, weight) {
         if (parseInt(svg.attr('height')) < (thisobj.posY + thisobj.radius)) {
             thisobj.posY = parseInt(svg.attr('height')) - thisobj.radius - 1;
             thisobj.aoa = 2 * Math.PI - thisobj.aoa;
-            thisobj.vy = -thisobj.vy;
+            if(thisobj.vy < ballPlasticityConstant) {
+                thisobj.isBallAtRest = true;
+                thisobj.vy = 0;
+            } else {
+                thisobj.vy = -thisobj.vy + ballPlasticityConstant;
+            }
         }
 
         if (thisobj.posY < thisobj.radius) {
