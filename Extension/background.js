@@ -68,6 +68,63 @@ $(document).ready(function () {
     });
 });
 
+function get_days_since_epoch() {
+    start_of_epoch = moment().year(2016).month(0).date(1).hours(0).minutes(0).seconds(0).milliseconds(0)
+    return moment().diff(start_of_epoch, 'days')
+  }
+
+
+var prev_browser_focused = false;
+var secondsOnCurrentDomain = 0;
+setInterval(
+    chrome.windows.getCurrent(function(browser) {
+        focused = browser.focused;
+        if(focused != prev_browser_focused)
+            prev_browser_focused = focused;
+    }), 500);
+    
+setInterval (() => {
+    if(!prev_browser_focused)
+        return;
+    chrome.tabs.query({active: true, lastFocusedWindow: true}, function(tabs) {
+        if(tabs.length > 0)
+            active_tab = tabs[0];
+        if(!active_tab)
+            return;
+        if (!active_tab.url.startsWith('http://') && !active_tab.url.startsWith('https://'))
+            return;
+        //if iframed_domain_to_track?
+        //  current_domain = iframed_domain_to_track
+        //else
+        //  current_domain = url_to_domain(active_tab.url)
+        if(active_tab.url.indexOf("://") > -1) {
+            current_domain = [active_tab.url.split('/')[0], "//", active_tab.url.split('/')[2]].join("");
+        }
+        else {
+            current_domain = active_tab.url.split('/')[0];
+        }
+
+        //if (current_idlestate != 'active') and (not is_video_domain(current_domain))
+        //  return
+        current_day = get_days_since_epoch();
+        
+        chrome.cookies.getAll({url: current_domain}, function(cookies) {
+            var d = new Date();
+            var secondsSinceEpoch = d.getTime() / 1000;
+            let lastSavedDayCookie = cookies.find(cookie => cookie.name === 'LastSavedDay');
+            if(lastSavedDayCookie && parseInt(lastSavedDayCookie.value) === current_day) {
+                var totalElapsedSeconds = parseInt(cookies.find(cookie => cookie.name === 'SecondsOnDomainToday').value);
+                secondsOnCurrentDomain = totalElapsedSeconds + 1;
+            } else {
+                secondsOnCurrentDomain = 0;
+                chrome.cookies.set({ url: current_domain, name: "LastSavedDay", value: String(current_day), expirationDate: secondsSinceEpoch + 60 * 60 * 24 });
+            }
+            chrome.cookies.set({ url: current_domain, name: "SecondsOnDomainToday", value: String(secondsOnCurrentDomain) , expirationDate: secondsSinceEpoch + 60 * 60 * 24 });
+            
+        })
+    })
+}, 1000);
+
 // here we store panel' state for every tab
 var PP_state = [];
 
@@ -316,6 +373,10 @@ chrome.runtime.onMessage.addListener(
         else if (request.type == PP_RequestType.GetNotifications) {
             var id = localStorage[request.keyName];
             sendResponse(id);
+        }
+
+        else if (request.type == PP_RequestType.GetElapsedTimeOnDomain) {
+            sendResponse(secondsOnCurrentDomain);
         }
 
         return true;

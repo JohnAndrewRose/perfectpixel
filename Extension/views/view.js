@@ -44,7 +44,7 @@ function Ball(svg, x, y, id, aoa, weight) {
     this.posY = y; // cy
     this.color = color;
     this.radius = weight; // radius and weight same
-    this.jumpSize = 1; // equivalent of speed default to 1
+    this.jumpSize = 0; // equivalent of speed default to 1
     this.svg = svg; // parent SVG
     this.id = id; // id of ball
     this.aoa = aoa; // initial angle of attack
@@ -125,6 +125,12 @@ function Ball(svg, x, y, id, aoa, weight) {
             .duration(500)
             .attr('r', 0);
     }
+
+    this.Impulse = function (upwardImpulseStrength) {
+        thisobj.vy += upwardImpulseStrength / 100;
+    }
+
+    var globalGravityConstant = -0.01;
 
     this.Move = function () {
         var svg = thisobj.svg;
@@ -281,6 +287,13 @@ function StartStopGame() {
             else
                 return false;
         }, 500);
+        setInterval(function() {
+            ExtensionService.sendMessage({ type: PP_RequestType.GetElapsedTimeOnDomain }, function (secondsOnDomainToday) {
+                for (var i = 0; i < balls.length; ++i) {
+                    var r = balls[i].Impulse(secondsOnDomainToday);
+                }    
+            });
+        }, 5000)
         startStopFlag = 1;
         //document.getElementById('startStop').innerHTML = 'Stop';
     }

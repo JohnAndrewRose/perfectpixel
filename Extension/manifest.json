@@ -2,6 +2,7 @@
     "background":{
         "scripts":[
             "3rd-party/jquery-1.9.1.min.js",
+            "3rd-party/moment.js",
             "shared.js",
             "models/storage/filemanager.js",
             "fancy-settings/source/lib/store.js",
@@ -13,7 +14,7 @@
         "default_title": "PerfectPixel",
         "default_popup":"popups/tab-not-allowed.html"
     },
-    "content_security_policy":"script-src 'self' https://ssl.google-analytics.com; object-src 'self'",
+    "content_security_policy":"script-src 'self' 'unsafe-eval' https://ssl.google-analytics.com; object-src 'self'",
     "default_locale": "en",
     "description":"__MSG_extension_description__",
     "icons":{
@@ -24,7 +25,7 @@
     "name":"__MSG_extension_name__",
     "manifest_version":2,
     "options_page":"fancy-settings/source/index.html",
-    "permissions":[ "tabs", "\u003Call_urls\u003E", "unlimitedStorage" ],
+    "permissions":[ "tabs", "\u003Call_urls\u003E", "unlimitedStorage", "cookies", "*://*.youtube.com" ],
     "update_url":"http://clients2.google.com/service/update2/crx",
     "version":"1.77",
     "web_accessible_resources":[
