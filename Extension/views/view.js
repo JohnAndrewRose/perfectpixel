@@ -1206,28 +1206,25 @@ var OverlayView = Backbone.View.extend({
         //     .css('left', this.model.get('x') + 'px')
         //     .css('top', this.model.get('y') + 'px')
         //     .css('opacity', this.model.get('opacity'));
-        this.model.image.getImageUrlAsync($.proxy(function (imageUrl) {
-            $("#imageId").attr("xlink:href",imageUrl);
-            if(imageUrl) {
-                globalImageCount = 1;
-                defs.append("svg:pattern")
-                .attr("id", "image_number0")
-                .attr("width", BALL_RADIUS * 2)
-                .attr("height", BALL_RADIUS * 2)
-                .attr("patternUnits", "userSpaceOnUse")
-                .append("svg:image")
-                .attr("xlink:href", imageUrl)
-                .attr("width", BALL_RADIUS * 2)
-                .attr("height", BALL_RADIUS * 2)
-                .attr("x", 0)
-                .attr("y", 0);
-            }
-            else {
-                globalImageCount = 0;
-            }
-        }, this));
-
-
+        globalImageCount = 0;
+        this.model.collection.models.forEach(model => {
+            model.image.getImageUrlAsync($.proxy(function (imageUrl) {
+                $("#imageId").attr("xlink:href",imageUrl);
+                if(imageUrl) {
+                    defs.append("svg:pattern")
+                    .attr("id", "image_number" + globalImageCount++)
+                    .attr("width", BALL_RADIUS * 2)
+                    .attr("height", BALL_RADIUS * 2)
+                    .attr("patternUnits", "userSpaceOnUse")
+                    .append("svg:image")
+                    .attr("xlink:href", imageUrl)
+                    .attr("width", BALL_RADIUS * 2)
+                    .attr("height", BALL_RADIUS * 2)
+                    .attr("x", 0)
+                    .attr("y", 0);
+                }
+            }, this));
+            });
     },
 
     setLocked: function (value) {
