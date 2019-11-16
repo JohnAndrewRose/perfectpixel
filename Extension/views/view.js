@@ -105,14 +105,16 @@ d3.select('body')
         var ball = svg.selectAll('#' + thisobj.id)
             .data(thisobj.data)
             ;
+            //"transform": "translate(" + thisobj.posX + "," + thisobj.posY + ")",
         ball.enter()
             .append("circle")
-            .attr({ "transform": "translate(" + thisobj.posY + "," + thisobj.posY + ")",
-                "id": thisobj.id, 'class': 'ball', 'r': thisobj.radius,
-                'cx': thisobj.radius / 2, 'cy': thisobj.radius / 2, 'weight': thisobj.weight })
+            .attr({ "id": thisobj.id, 'class': 'ball', 'r': thisobj.radius,
+                'cx': thisobj.radius, 'cy': thisobj.radius, 'weight': thisobj.weight })
             .style("fill", "#fff")
             .style("fill", "url(#image_number" + thisobj.id + ")")
             ;
+            ball
+            .attr("transform", "translate(" + thisobj.posX + "," + thisobj.posY + ")")
 
         // intersect ball is used to show collision effect - every ball has it's own intersect ball
         var intersectBall = ball.enter()
