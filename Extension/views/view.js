@@ -21,13 +21,17 @@
  * PerfectPixel panel view
  */
 var svg = null;
+var defs = null;
 var balls = []; // global array representing balls
 var offsetHeight = 0;
 var offsetLeft = 0;
+const BALL_RADIUS = 40;
 var color = d3.scale.category20();
 var startStopFlag = null;
 var lastMouseX = 0;
 var lastMouseY = 0;
+var globalBallCount = 0;
+var globalImageCount = 0;
 // I always like to handle ESC key
 d3.select('body')
     .on('keydown', function () {
@@ -39,16 +43,14 @@ d3.select('body')
         }
     });
 
-    function Ball(svg, defs, x, y, id, aoa, weight) {
-        this.isBallAtRest = true;
+    function Ball(svg, x, y, number, aoa, weight, initialSpeed) {
+        this.isBallAtRest = (initialSpeed === 0);
     this.radius = weight; // radius and weight same
-    this.defs = defs;
     this.posX = x; // cx
     this.posY = y; // cy
     this.color = color;
-    this.jumpSize = 1; // equivalent of speed default to 1
     this.svg = svg; // parent SVG
-    this.id = id; // id of ball
+    this.number = number; // id of ball
     this.aoa = aoa; // initial angle of attack
     this.weight = weight;
     this.elasticPotentialEnergy = 0;
@@ -59,14 +61,14 @@ d3.select('body')
         this.weight = 10;
     this.radius = this.weight;
 
-    this.data = [this.id]; // allow us to use d3.enter()
+    this.data = ['n' + this.number]; // allow us to use d3.enter()
 
     var thisobj = this; // i like to use thisobj instead of this. this many times not reliable particularly handling evnet
 
     // **** aoa is used only here -- earlier I was using to next move position.
     // Now aoa and speed together is velocity 
-    this.vx = Math.cos(thisobj.aoa) * thisobj.jumpSize; // velocity x
-    this.vy = Math.sin(thisobj.aoa) * thisobj.jumpSize; // velocity y
+    this.vx = Math.cos(thisobj.aoa) * initialSpeed; // velocity x
+    this.vy = Math.sin(thisobj.aoa) * initialSpeed; // velocity y
     this.initialVx = this.vx;
     this.initialVy = this.vy;
     this.initialPosX = this.posX;
@@ -101,17 +103,16 @@ d3.select('body')
 
     this.Draw = function () {
         var svg = thisobj.svg;
-        var defs = thisobj.defs;
-        var ball = svg.selectAll('#' + thisobj.id)
+        var ball = svg.selectAll('#n' + thisobj.number)
             .data(thisobj.data)
             ;
             //"transform": "translate(" + thisobj.posX + "," + thisobj.posY + ")",
         ball.enter()
             .append("circle")
-            .attr({ "id": thisobj.id, 'class': 'ball', 'r': thisobj.radius,
+            .attr({ "id": 'n'+thisobj.number, 'class': 'ball', 'r': thisobj.radius,
                 'cx': thisobj.radius, 'cy': thisobj.radius, 'weight': thisobj.weight })
             .style("fill", "#fff")
-            .style("fill", "url(#image_number" + thisobj.id + ")")
+            .style("fill", "url(#image_number" + thisobj.number % globalImageCount + ")")
             ;
             ball
             .attr("transform", "translate(" + thisobj.posX + "," + thisobj.posY + ")")
@@ -119,12 +120,12 @@ d3.select('body')
         // intersect ball is used to show collision effect - every ball has it's own intersect ball
         var intersectBall = ball.enter()
             .append('circle')
-            .attr({ 'id': thisobj.id + '_intersect', 'class': 'intersectBall' });
+            .attr({ 'id': 'n'+thisobj.number + '_intersect', 'class': 'intersectBall' });
     }
 
     this.Remove = function () {
         var svg = thisobj.svg;
-        var ball = svg.selectAll('#' + thisobj.id)
+        var ball = svg.selectAll('#n' + thisobj.number)
             .data(thisobj.data)
         ball.transition()
             .duration(500)
@@ -145,44 +146,20 @@ d3.select('body')
         }
     }
 
-    this.addImageIfNone = function(imageUrl) {
-        if(!this.hasImage) {
-            this.imageUrl = imageUrl;
-            this.hasImage = true;
-            this.defs.append("svg:pattern")
-                .attr("id", "image_number" + this.id)
-                .attr("width", this.weight * 2)
-                .attr("height", this.weight * 2)
-                .attr("patternUnits", "userSpaceOnUse")
-                .append("svg:image")
-                .attr("xlink:href", this.imageUrl)
-                .attr("width", this.weight * 2)
-                .attr("height", this.weight * 2)
-                .attr("x", 0)
-                .attr("y", 0);
-            return true;
-        } else {
-            return false;
-        }
-    }
-
     this.Move = function () {
         var svg = thisobj.svg;
 
         if(!thisobj.isBallAtRest && !thisobj.lastIsUnderMouse)
             this.vy += globalGravityConstant;
 
-        //thisobj.posX += Math.cos(thisobj.aoa) * thisobj.jumpSize;
-        //thisobj.posY += Math.sin(thisobj.aoa) * thisobj.jumpSize;
-
         var isUnderMouse = false;
-        var x = lastMouseX;
-        var y = lastMouseY;
+        var x = lastMouseX - thisobj.radius / 2;
+        var y = lastMouseY - thisobj.radius / 2;
         // do what you want with x and y
         var a = x - (thisobj.posX + offsetLeft);
         var b = y - thisobj.posY;
         var c = Math.sqrt(a * a + b * b);
-        if (c < thisobj.radius) {
+        if (c <= thisobj.radius + 10) {
             isUnderMouse = true;
         } else {
             isUnderMouse = false;
@@ -207,20 +184,20 @@ d3.select('body')
         thisobj.posX += thisobj.vx;
         thisobj.posY += thisobj.vy;
 
-        if (parseInt(svg.attr('width')) <= (thisobj.posX + thisobj.radius)) {
-            thisobj.posX = parseInt(svg.attr('width')) - thisobj.radius - 1;
+        if (parseInt(svg.attr('width')) <= (thisobj.posX + 2 * thisobj.radius)) {
+            thisobj.posX = parseInt(svg.attr('width')) - 2 * thisobj.radius - 1;
             thisobj.aoa = Math.PI - thisobj.aoa;
             thisobj.vx = -thisobj.vx;
         }
 
-        if (thisobj.posX < thisobj.radius) {
-            thisobj.posX = thisobj.radius + 1;
+        if (thisobj.posX < 0) {
+            thisobj.posX = 1;
             thisobj.aoa = Math.PI - thisobj.aoa;
             thisobj.vx = -thisobj.vx;
         }
 
-        if (parseInt(svg.attr('height')) < (thisobj.posY + thisobj.radius)) {
-            thisobj.posY = parseInt(svg.attr('height')) - thisobj.radius - 1;
+        if (parseInt(svg.attr('height')) < (thisobj.posY + 2 * thisobj.radius)) {
+            thisobj.posY = parseInt(svg.attr('height')) - 2 * thisobj.radius - 1;
             thisobj.aoa = 2 * Math.PI - thisobj.aoa;
             if(thisobj.vy < ballPlasticityConstant) {
                 thisobj.isBallAtRest = true;
@@ -230,8 +207,8 @@ d3.select('body')
             }
         }
 
-        if (thisobj.posY < thisobj.radius) {
-            thisobj.posY = thisobj.radius + 1;
+        if (thisobj.posY < 0) {
+            thisobj.posY = 1;
             thisobj.aoa = 2 * Math.PI - thisobj.aoa;
             thisobj.vy = -thisobj.vy;
         }
@@ -280,7 +257,7 @@ function ProcessCollision(ball1, ball2) {
             / (ball1.radius + ball2.radius);
 
         // show collision effect for 500 miliseconds
-        var intersectBall = svg.select('#' + ball1.id + '_intersect');
+        var intersectBall = svg.select('#n' + ball1.number + '_intersect');
         intersectBall.attr({ 'cx': interx, 'cy': intery, 'r': 5, 'fill': 'black' })
             .transition()
             .duration(500)
@@ -331,9 +308,18 @@ function StartStopGame() {
         }, 500);
         setInterval(function() {
             ExtensionService.sendMessage({ type: PP_RequestType.GetElapsedTimeOnDomain }, function (secondsOnDomainToday) {
-                for (var i = 0; i < balls.length; ++i) {
-                    var r = balls[i].Impulse(secondsOnDomainToday);
-                }    
+                var numberBallsToPush = 0;
+                while(secondsOnDomainToday > 0) {
+                    ++numberBallsToPush;
+                    secondsOnDomainToday -= 3000;
+                }
+                if(numberBallsToPush> 1) {
+                    numberBallsToPush = 1;
+                }
+                while(numberBallsToPush > 0 && balls.length < 100) {
+                    var angleOfAttack = Math.random() * Math.PI;
+                    balls.push(new Ball(svg, 201, 201, globalBallCount++, angleOfAttack, BALL_RADIUS, numberBallsToPush--));
+                }
             });
         }, 5000)
         startStopFlag = 1;
@@ -383,7 +369,6 @@ var PanelView = Backbone.View.extend({
     screenBordersElementId: 'chromeperfectpixel-window',
     panelUpdatedFirstTime: true,
     _isFrozen: false,
-    globalImageUrl: null,
 
     events: {
         'click .chromeperfectpixel-showHideBtn': 'toggleOverlayShown',
@@ -977,17 +962,9 @@ var PanelView = Backbone.View.extend({
             .style("fill", "none")
             //.attr("transform", "translate(" + 1 + "," + 1 + ")")
             ;
-        var defs = svg.append('svg:defs')
+        defs = svg.append('svg:defs')
 
 
-        balls.push(new Ball(svg, defs, 201, 201, 'n3', Math.PI / 9, 45));
-
-        balls.push(new Ball(svg, defs, 51, 31, 'n2', Math.PI / 3, 20));
-        /*balls.push(new Ball(svg, 501, 101, 'n1', 'red', Math.PI / 6));
-        balls.push(new Ball(svg, 201, 201, 'n3', 'yellow', Math.PI / 9, 90));
-        balls.push(new Ball(svg, 91, 31, 'n4', 'orange', Math.PI / 2, 15));
-        balls.push(new Ball(svg, 201, 21, 'n5', 'pink', Math.PI + Math.PI / 4, 15));
-        balls.push(new Ball(svg, 401, 41, 'n6', 'blue', Math.PI + Math.PI / 7, 25));*/
 
         for (var i = 0; i < balls.length; ++i) {
             balls[i].Draw();
@@ -1230,13 +1207,23 @@ var OverlayView = Backbone.View.extend({
         //     .css('top', this.model.get('y') + 'px')
         //     .css('opacity', this.model.get('opacity'));
         this.model.image.getImageUrlAsync($.proxy(function (imageUrl) {
-            this.globalImageUrl = imageUrl;
             $("#imageId").attr("xlink:href",imageUrl);
             if(imageUrl) {
-                for (var i = 0; i < balls.length; ++i) {
-                    if(balls[i].addImageIfNone(imageUrl))
-                        continue;
-                }
+                globalImageCount = 1;
+                defs.append("svg:pattern")
+                .attr("id", "image_number0")
+                .attr("width", BALL_RADIUS * 2)
+                .attr("height", BALL_RADIUS * 2)
+                .attr("patternUnits", "userSpaceOnUse")
+                .append("svg:image")
+                .attr("xlink:href", imageUrl)
+                .attr("width", BALL_RADIUS * 2)
+                .attr("height", BALL_RADIUS * 2)
+                .attr("x", 0)
+                .attr("y", 0);
+            }
+            else {
+                globalImageCount = 0;
             }
         }, this));
 
