@@ -39,15 +39,14 @@ d3.select('body')
         }
     });
 
-    function Ball(svg, x, y, id, aoa, weight) {
+    function Ball(svg, defs, x, y, id, aoa, weight) {
         this.isBallAtRest = true;
     this.radius = weight; // radius and weight same
-    //this.posX = x; // cx
-    //this.posY = y; // cy
-    this.posX = parseInt(svg.attr('width')) - this.radius - 1;
-    this.posY = parseInt(svg.attr('height')) - this.radius - 1; // always start on bottom of screen
+    this.defs = defs;
+    this.posX = x; // cx
+    this.posY = y; // cy
     this.color = color;
-    this.jumpSize = 0; // equivalent of speed default to 1
+    this.jumpSize = 1; // equivalent of speed default to 1
     this.svg = svg; // parent SVG
     this.id = id; // id of ball
     this.aoa = aoa; // initial angle of attack
@@ -102,30 +101,18 @@ d3.select('body')
 
     this.Draw = function () {
         var svg = thisobj.svg;
+        var defs = thisobj.defs;
         var ball = svg.selectAll('#' + thisobj.id)
             .data(thisobj.data)
             ;
         ball.enter()
             .append("circle")
-            .attr({ "id": thisobj.id, 'class': 'ball', 'r': thisobj.radius, 'weight': thisobj.weight })
-            .style("fill", "url(#image)")
+            .attr({ "transform": "translate(" + thisobj.posY + "," + thisobj.posY + ")",
+                "id": thisobj.id, 'class': 'ball', 'r': thisobj.radius,
+                'cx': thisobj.radius / 2, 'cy': thisobj.radius / 2, 'weight': thisobj.weight })
+            .style("fill", "#fff")
+            .style("fill", "url(#image_number" + thisobj.id + ")")
             ;
-        ball
-            //.transition()//.duration(50)
-            .attr("cx", thisobj.posX)
-            .attr("cy", thisobj.posY)
-            ;
-
-        if(this.hasImage) {
-            var imgs = thisobj.svg.selectAll("image").data([0]);
-            imgs.enter()
-            .append("svg:image")
-            .attr("xlink:href", thisobj.imageUrl)
-            .attr("x", thisobj.posX - thisobj.radius)
-            .attr("y", thisobj.posY - thisobj.radius)
-            .attr("width", 2*thisobj.radius)
-            .attr("height", 2*thisobj.radius);
-            }
 
         // intersect ball is used to show collision effect - every ball has it's own intersect ball
         var intersectBall = ball.enter()
@@ -150,14 +137,27 @@ d3.select('body')
         if(upwardImpulseStrength > 200) {
             upwardImpulseStrength = 200;
         }
-        thisobj.vy -= upwardImpulseStrength / secondsToImpulseConversionConstant;
-        thisobj.isBallAtRest = false;
+        if(!thisobj.lastIsUnderMouse) {
+            thisobj.vy -= upwardImpulseStrength / secondsToImpulseConversionConstant;
+            thisobj.isBallAtRest = false;
+        }
     }
 
     this.addImageIfNone = function(imageUrl) {
         if(!this.hasImage) {
             this.imageUrl = imageUrl;
             this.hasImage = true;
+            this.defs.append("svg:pattern")
+                .attr("id", "image_number" + this.id)
+                .attr("width", this.weight * 2)
+                .attr("height", this.weight * 2)
+                .attr("patternUnits", "userSpaceOnUse")
+                .append("svg:image")
+                .attr("xlink:href", this.imageUrl)
+                .attr("width", this.weight * 2)
+                .attr("height", this.weight * 2)
+                .attr("x", 0)
+                .attr("y", 0);
             return true;
         } else {
             return false;
@@ -741,13 +741,6 @@ var PanelView = Backbone.View.extend({
 
         var windowHtml = 
         '<div id="' + this.screenBordersElementId + '">' +
-        '<svg id="mySvg" width="0" height="0">' +
-        '<defs id="mdef">' +
-        '<pattern id="image" x="0" y="0" height="40" width="40">' +
-        '<image id="imageId" x="0" y="0" width="40" height="40"></image>' +
-        '</pattern>' +
-        '</defs>' +
-        '</svg>' +
         '</div>';
 
 
@@ -982,12 +975,13 @@ var PanelView = Backbone.View.extend({
             .style("fill", "none")
             //.attr("transform", "translate(" + 1 + "," + 1 + ")")
             ;
+        var defs = svg.append('svg:defs')
 
 
-        balls.push(new Ball(svg, 201, 201, 'n3', Math.PI / 9, 45));
+        balls.push(new Ball(svg, defs, 201, 201, 'n3', Math.PI / 9, 45));
 
-        /*balls.push(new Ball(svg, 51, 31, 'n2', 'green', Math.PI / 3, 20));
-        balls.push(new Ball(svg, 501, 101, 'n1', 'red', Math.PI / 6));
+        balls.push(new Ball(svg, defs, 51, 31, 'n2', Math.PI / 3, 20));
+        /*balls.push(new Ball(svg, 501, 101, 'n1', 'red', Math.PI / 6));
         balls.push(new Ball(svg, 201, 201, 'n3', 'yellow', Math.PI / 9, 90));
         balls.push(new Ball(svg, 91, 31, 'n4', 'orange', Math.PI / 2, 15));
         balls.push(new Ball(svg, 201, 21, 'n5', 'pink', Math.PI + Math.PI / 4, 15));
