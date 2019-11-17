@@ -43,20 +43,21 @@ d3.select('body')
         }
     });
 
+<<<<<<< HEAD
 function Ball(svg, x, y, number, aoa, weight, initialSpeed) {
     this.isBallAtRest = (initialSpeed === 0);
+=======
+    function Ball(svg, x, y, number, weight, initialVx, initialVy) {
+>>>>>>> develop
     this.radius = weight; // radius and weight same
     this.posX = x; // cx
     this.posY = y; // cy
     this.color = color;
     this.svg = svg; // parent SVG
     this.number = number; // id of ball
-    this.aoa = aoa; // initial angle of attack
     this.weight = weight;
     this.elasticPotentialEnergy = 0;
 
-    if (!this.aoa)
-        this.aoa = Math.PI / 7;
     if (!this.weight)
         this.weight = 10;
     this.radius = this.weight;
@@ -67,8 +68,8 @@ function Ball(svg, x, y, number, aoa, weight, initialSpeed) {
 
     // **** aoa is used only here -- earlier I was using to next move position.
     // Now aoa and speed together is velocity 
-    this.vx = Math.cos(thisobj.aoa) * initialSpeed; // velocity x
-    this.vy = Math.sin(thisobj.aoa) * initialSpeed; // velocity y
+    this.vx = initialVx;
+    this.vy = initialVy;
     this.initialVx = this.vx;
     this.initialVy = this.vy;
     this.initialPosX = this.posX;
@@ -118,11 +119,14 @@ function Ball(svg, x, y, number, aoa, weight, initialSpeed) {
             ;
         ball
             .attr("transform", "translate(" + thisobj.posX + "," + thisobj.posY + ")")
+<<<<<<< HEAD
 
         // intersect ball is used to show collision effect - every ball has it's own intersect ball
         var intersectBall = ball.enter()
             .append('circle')
             .attr({ 'id': 'n' + thisobj.number + '_intersect', 'class': 'intersectBall' });
+=======
+>>>>>>> develop
     }
 
     this.Remove = function () {
@@ -135,8 +139,9 @@ function Ball(svg, x, y, number, aoa, weight, initialSpeed) {
     }
 
     var secondsToImpulseConversionConstant = 10;
-    var globalGravityConstant = 0.5;
+    var globalGravityConstant = 0.3;
     var ballPlasticityConstant = 1;
+    var ballFrictionConstant = 0.1;
 
     this.Impulse = function (upwardImpulseStrength) {
         if (upwardImpulseStrength > 200) {
@@ -144,15 +149,22 @@ function Ball(svg, x, y, number, aoa, weight, initialSpeed) {
         }
         if (!thisobj.lastIsUnderMouse) {
             thisobj.vy -= upwardImpulseStrength / secondsToImpulseConversionConstant;
-            thisobj.isBallAtRest = false;
         }
     }
 
     this.Move = function () {
         var svg = thisobj.svg;
 
+<<<<<<< HEAD
         if (!thisobj.isBallAtRest && !thisobj.lastIsUnderMouse)
+=======
+        if(!(thisobj.vx === 0 && 
+             thisobj.vy === 0 && 
+             thisobj.posY === (parseInt(svg.attr('height')) - 2 * thisobj.radius - 1)) && 
+             !thisobj.lastIsUnderMouse) {
+>>>>>>> develop
             this.vy += globalGravityConstant;
+        }
 
         var isUnderMouse = false;
         var x = lastMouseX - thisobj.radius / 2;
@@ -161,7 +173,7 @@ function Ball(svg, x, y, number, aoa, weight, initialSpeed) {
         var a = x - (thisobj.posX + offsetLeft);
         var b = y - thisobj.posY;
         var c = Math.sqrt(a * a + b * b);
-        if (c <= thisobj.radius + 10) {
+        if (c <= thisobj.radius) {
             isUnderMouse = true;
         } else {
             isUnderMouse = false;
@@ -188,24 +200,36 @@ function Ball(svg, x, y, number, aoa, weight, initialSpeed) {
 
         if (parseInt(svg.attr('width')) <= (thisobj.posX + 2 * thisobj.radius)) {
             thisobj.posX = parseInt(svg.attr('width')) - 2 * thisobj.radius - 1;
-            thisobj.aoa = Math.PI - thisobj.aoa;
             thisobj.vx = -thisobj.vx;
         }
 
         if (thisobj.posX < 0) {
             thisobj.posX = 1;
-            thisobj.aoa = Math.PI - thisobj.aoa;
             thisobj.vx = -thisobj.vx;
         }
 
         if (parseInt(svg.attr('height')) < (thisobj.posY + 2 * thisobj.radius)) {
             thisobj.posY = parseInt(svg.attr('height')) - 2 * thisobj.radius - 1;
+<<<<<<< HEAD
             thisobj.aoa = 2 * Math.PI - thisobj.aoa;
             if (thisobj.vy < ballPlasticityConstant) {
                 thisobj.isBallAtRest = true;
+=======
+            if(thisobj.vy < ballPlasticityConstant) {
+>>>>>>> develop
                 thisobj.vy = 0;
             } else {
                 thisobj.vy = -thisobj.vy + ballPlasticityConstant;
+            }
+        }
+
+        if(parseInt(svg.attr('height')) <= (thisobj.posY + 2 * thisobj.radius + 1)) {
+            if(thisobj.vx > ballFrictionConstant) {
+                thisobj.vx -= ballFrictionConstant;
+            } else if(thisobj.vx < -ballFrictionConstant) {
+                thisobj.vx += ballFrictionConstant;
+            } else {
+                thisobj.vx = 0;
             }
         }
 
@@ -214,12 +238,6 @@ function Ball(svg, x, y, number, aoa, weight, initialSpeed) {
             thisobj.aoa = 2 * Math.PI - thisobj.aoa;
             thisobj.vy = -thisobj.vy;
         }
-
-        // **** NOT USING AOA except during initilization. Just left this for future reference ***** 
-        if (thisobj.aoa > 2 * Math.PI)
-            thisobj.aoa = thisobj.aoa - 2 * Math.PI;
-        if (thisobj.aoa < 0)
-            thisobj.aoa = 2 * Math.PI + thisobj.aoa;
 
         thisobj.Draw();
     }
@@ -252,28 +270,27 @@ function ProcessCollision(ball1, ball2) {
     ball2 = balls[ball2];
 
     if (CheckCollision(ball1, ball2)) {
-        // intersection point
-        var interx = ((ball1.posX * ball2.radius) + ball2.posX * ball1.radius)
-            / (ball1.radius + ball2.radius);
-        var intery = ((ball1.posY * ball2.radius) + ball2.posY * ball1.radius)
-            / (ball1.radius + ball2.radius);
-
-        // show collision effect for 500 miliseconds
-        var intersectBall = svg.select('#n' + ball1.number + '_intersect');
-        intersectBall.attr({ 'cx': interx, 'cy': intery, 'r': 5, 'fill': 'black' })
-            .transition()
-            .duration(500)
-            .attr('r', 0);
-
+        const MIN_DIFFERENCE = 0.1;
         // calculate new velocity of each ball.
-        var vx1 = (ball1.vx * (ball1.weight - ball2.weight)
+        var vx1 = (ball1.vx * MIN_DIFFERENCE
             + (2 * ball2.weight * ball2.vx)) / (ball1.weight + ball2.weight);
-        var vy1 = (ball1.vy * (ball1.weight - ball2.weight)
+        var vy1 = (ball1.vy * MIN_DIFFERENCE
             + (2 * ball2.weight * ball2.vy)) / (ball1.weight + ball2.weight);
-        var vx2 = (ball2.vx * (ball2.weight - ball1.weight)
+        var vx2 = (ball2.vx * MIN_DIFFERENCE
             + (2 * ball1.weight * ball1.vx)) / (ball1.weight + ball2.weight);
-        var vy2 = (ball2.vy * (ball2.weight - ball1.weight)
+        var vy2 = (ball2.vy * MIN_DIFFERENCE
             + (2 * ball1.weight * ball1.vy)) / (ball1.weight + ball2.weight);
+            if(vx1 < MIN_DIFFERENCE && vx2 < MIN_DIFFERENCE) {
+                var slideMultiplier = Math.abs(ball1.posX - ball2.posX);
+                if(MIN_DIFFERENCE * slideMultiplier > (vx1 + vy1 + vx2 + vy2)) {
+                    slideMultipler = (vx1 + vy1 + vx2 + vy2) / MIN_DIFFERENCE;
+                }
+                if(ball1.posY > ball2.posY) {
+                    vx2 = ((ball1.posX > ball2.posX) ? -MIN_DIFFERENCE : MIN_DIFFERENCE) * slideMultiplier;
+                } else {
+                    vx1 = ((ball1.posX > ball2.posX) ? MIN_DIFFERENCE : -MIN_DIFFERENCE) * slideMultiplier;
+                }
+            }
 
         //set velocities for both balls
         ball1.vx = vx1;
@@ -281,13 +298,63 @@ function ProcessCollision(ball1, ball2) {
         ball2.vx = vx2;
         ball2.vy = vy2;
 
+        var numberChecks = 0;
         //ensure one ball is not inside others. distant apart till not colliding
         while (CheckCollision(ball1, ball2)) {
+            if(numberChecks++ > 100) {
+                return;
+            }
             ball1.posX += ball1.vx;
             ball1.posY += ball1.vy;
 
             ball2.posX += ball2.vx;
             ball2.posY += ball2.vy;
+
+            if (parseInt(svg.attr('width')) <= (ball1.posX + 2 * BALL_RADIUS) || 
+                parseInt(svg.attr('width')) <= (ball2.posX + 2 * BALL_RADIUS)) {
+                var resultingVx = Math.abs(ball1.vx) + Math.abs(ball2.vx);
+                if(ball1.posX > ball2.posX) {
+                    ball1.posX = parseInt(svg.attr('width')) - 2 * BALL_RADIUS - 1;
+                    ball2.posX -= resultingVx;
+                } else {
+                    ball2.posX = parseInt(svg.attr('width')) - 2 * BALL_RADIUS - 1;
+                    ball1.posX -= resultingVx;
+                }
+            }
+    
+            if (ball1.posX < 0 || ball2.posX < 0) {
+                var resultingVx = Math.abs(ball1.vx) + Math.abs(ball2.vx);
+                if(ball2.posX > ball1.posX) {
+                    ball1.posX = 1;
+                    ball2.posX += resultingVx;
+                } else {
+                    ball2.posX = 1;
+                    ball1.posX += resultingVx;
+                }
+            }
+    
+            if (parseInt(svg.attr('height')) < (ball1.posY + 2 * BALL_RADIUS) ||
+                parseInt(svg.attr('height')) < (ball2.posY + 2 * BALL_RADIUS)) {
+                    var resultingVy = Math.abs(ball1.vy) + Math.abs(ball2.vy);
+                    if(ball1.posY > ball2.posY) {
+                        ball1.posY = parseInt(svg.attr('height')) - 2 * BALL_RADIUS - 1;
+                        ball2.posY -= resultingVy;
+                    } else {
+                        ball2.posY = parseInt(svg.attr('height')) - 2 * BALL_RADIUS - 1;
+                        ball1.posY -= resultingVy;
+                    }
+                }
+    
+            if (ball1.posY < 0 || ball2.posY < 0) {
+                var resultingVy = Math.abs(ball1.vy) + Math.abs(ball2.vy);
+                if(ball2.posY > ball1.posY) {
+                    ball1.posY = 1;
+                    ball2.posY += resultingVy;
+                } else {
+                    ball2.posY = 1;
+                    ball1.posY += resultingVy;
+                }
+            }
         }
         ball1.Draw();
         ball2.Draw();
@@ -315,12 +382,29 @@ function StartStopGame() {
                     ++numberBallsToPush;
                     secondsOnDomainToday -= 3000;
                 }
+<<<<<<< HEAD
                 if (numberBallsToPush > 1) {
                     numberBallsToPush = 1;
                 }
                 while (numberBallsToPush > 0 && balls.length < 100) {
                     var angleOfAttack = Math.random() * Math.PI;
                     balls.push(new Ball(svg, 201, 201, globalBallCount++, angleOfAttack, BALL_RADIUS, numberBallsToPush--));
+=======
+                if(numberBallsToPush > 1) {
+                    numberBallsToPush = 1;
+                }
+                while(numberBallsToPush > 0 && balls.length < 5) {
+                    var angleOfAttack = Math.PI + Math.PI/2 + Math.random() * Math.PI/3;
+                    var rightX = parseInt(svg.attr('width')) - 2 * BALL_RADIUS - 1;
+                    var bottomY = parseInt(svg.attr('height')) - 2 * BALL_RADIUS - 1;
+                    var initialSpeed = 15 + Math.random() * 8;
+
+                    var vx = Math.cos(angleOfAttack) * initialSpeed; // velocity x
+                    var vy = Math.sin(angleOfAttack) * initialSpeed; // velocity y            
+        
+                    balls.push(new Ball(svg, rightX, bottomY, globalBallCount++, BALL_RADIUS, vx, vy));
+                    numberBallsToPush--;
+>>>>>>> develop
                 }
             });
         }, 5000)
@@ -1259,12 +1343,22 @@ var OverlayView = Backbone.View.extend({
         //     .css('left', this.model.get('x') + 'px')
         //     .css('top', this.model.get('y') + 'px')
         //     .css('opacity', this.model.get('opacity'));
+<<<<<<< HEAD
         this.model.image.getImageUrlAsync($.proxy(function (imageUrl) {
             $("#imageId").attr("xlink:href", imageUrl);
             if (imageUrl) {
                 globalImageCount = 1;
                 defs.append("svg:pattern")
                     .attr("id", "image_number0")
+=======
+        globalImageCount = 0;
+        this.model.collection.models.forEach(model => {
+            model.image.getImageUrlAsync($.proxy(function (imageUrl) {
+                $("#imageId").attr("xlink:href",imageUrl);
+                if(imageUrl) {
+                    defs.append("svg:pattern")
+                    .attr("id", "image_number" + globalImageCount++)
+>>>>>>> develop
                     .attr("width", BALL_RADIUS * 2)
                     .attr("height", BALL_RADIUS * 2)
                     .attr("patternUnits", "userSpaceOnUse")
@@ -1274,6 +1368,7 @@ var OverlayView = Backbone.View.extend({
                     .attr("height", BALL_RADIUS * 2)
                     .attr("x", 0)
                     .attr("y", 0);
+<<<<<<< HEAD
             }
             else {
                 globalImageCount = 0;
@@ -1281,6 +1376,11 @@ var OverlayView = Backbone.View.extend({
         }, this));
 
 
+=======
+                }
+            }, this));
+            });
+>>>>>>> develop
     },
 
     setLocked: function (value) {
