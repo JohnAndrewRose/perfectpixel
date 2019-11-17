@@ -43,20 +43,16 @@ d3.select('body')
         }
     });
 
-    function Ball(svg, x, y, number, aoa, weight, initialSpeed) {
-        this.isBallAtRest = (initialSpeed === 0);
+    function Ball(svg, x, y, number, weight, initialVx, initialVy) {
     this.radius = weight; // radius and weight same
     this.posX = x; // cx
     this.posY = y; // cy
     this.color = color;
     this.svg = svg; // parent SVG
     this.number = number; // id of ball
-    this.aoa = aoa; // initial angle of attack
     this.weight = weight;
     this.elasticPotentialEnergy = 0;
 
-    if (!this.aoa)
-        this.aoa = Math.PI / 7;
     if (!this.weight)
         this.weight = 10;
     this.radius = this.weight;
@@ -67,8 +63,8 @@ d3.select('body')
 
     // **** aoa is used only here -- earlier I was using to next move position.
     // Now aoa and speed together is velocity 
-    this.vx = Math.cos(thisobj.aoa) * initialSpeed; // velocity x
-    this.vy = Math.sin(thisobj.aoa) * initialSpeed; // velocity y
+    this.vx = initialVx;
+    this.vy = initialVy;
     this.initialVx = this.vx;
     this.initialVy = this.vy;
     this.initialPosX = this.posX;
@@ -116,11 +112,6 @@ d3.select('body')
             ;
             ball
             .attr("transform", "translate(" + thisobj.posX + "," + thisobj.posY + ")")
-
-        // intersect ball is used to show collision effect - every ball has it's own intersect ball
-        var intersectBall = ball.enter()
-            .append('circle')
-            .attr({ 'id': 'n'+thisobj.number + '_intersect', 'class': 'intersectBall' });
     }
 
     this.Remove = function () {
@@ -133,8 +124,9 @@ d3.select('body')
     }
 
     var secondsToImpulseConversionConstant = 10;
-    var globalGravityConstant = 0.5;
+    var globalGravityConstant = 0.3;
     var ballPlasticityConstant = 1;
+    var ballFrictionConstant = 0.1;
 
     this.Impulse = function (upwardImpulseStrength) {
         if(upwardImpulseStrength > 200) {
@@ -142,15 +134,18 @@ d3.select('body')
         }
         if(!thisobj.lastIsUnderMouse) {
             thisobj.vy -= upwardImpulseStrength / secondsToImpulseConversionConstant;
-            thisobj.isBallAtRest = false;
         }
     }
 
     this.Move = function () {
         var svg = thisobj.svg;
 
-        if(!thisobj.isBallAtRest && !thisobj.lastIsUnderMouse)
+        if(!(thisobj.vx === 0 && 
+             thisobj.vy === 0 && 
+             thisobj.posY === (parseInt(svg.attr('height')) - 2 * thisobj.radius - 1)) && 
+             !thisobj.lastIsUnderMouse) {
             this.vy += globalGravityConstant;
+        }
 
         var isUnderMouse = false;
         var x = lastMouseX - thisobj.radius / 2;
@@ -186,24 +181,30 @@ d3.select('body')
 
         if (parseInt(svg.attr('width')) <= (thisobj.posX + 2 * thisobj.radius)) {
             thisobj.posX = parseInt(svg.attr('width')) - 2 * thisobj.radius - 1;
-            thisobj.aoa = Math.PI - thisobj.aoa;
             thisobj.vx = -thisobj.vx;
         }
 
         if (thisobj.posX < 0) {
             thisobj.posX = 1;
-            thisobj.aoa = Math.PI - thisobj.aoa;
             thisobj.vx = -thisobj.vx;
         }
 
         if (parseInt(svg.attr('height')) < (thisobj.posY + 2 * thisobj.radius)) {
             thisobj.posY = parseInt(svg.attr('height')) - 2 * thisobj.radius - 1;
-            thisobj.aoa = 2 * Math.PI - thisobj.aoa;
             if(thisobj.vy < ballPlasticityConstant) {
-                thisobj.isBallAtRest = true;
                 thisobj.vy = 0;
             } else {
                 thisobj.vy = -thisobj.vy + ballPlasticityConstant;
+            }
+        }
+
+        if(parseInt(svg.attr('height')) <= (thisobj.posY + 2 * thisobj.radius + 1)) {
+            if(thisobj.vx > ballFrictionConstant) {
+                thisobj.vx -= ballFrictionConstant;
+            } else if(thisobj.vx < -ballFrictionConstant) {
+                thisobj.vx += ballFrictionConstant;
+            } else {
+                thisobj.vx = 0;
             }
         }
 
@@ -212,12 +213,6 @@ d3.select('body')
             thisobj.aoa = 2 * Math.PI - thisobj.aoa;
             thisobj.vy = -thisobj.vy;
         }
-
-        // **** NOT USING AOA except during initilization. Just left this for future reference ***** 
-        if (thisobj.aoa > 2 * Math.PI)
-            thisobj.aoa = thisobj.aoa - 2 * Math.PI;
-        if (thisobj.aoa < 0)
-            thisobj.aoa = 2 * Math.PI + thisobj.aoa;
 
         thisobj.Draw();
     }
@@ -250,19 +245,6 @@ function ProcessCollision(ball1, ball2) {
     ball2 = balls[ball2];
 
     if (CheckCollision(ball1, ball2)) {
-        // intersection point
-        var interx = ((ball1.posX * ball2.radius) + ball2.posX * ball1.radius)
-            / (ball1.radius + ball2.radius);
-        var intery = ((ball1.posY * ball2.radius) + ball2.posY * ball1.radius)
-            / (ball1.radius + ball2.radius);
-
-        // show collision effect for 500 miliseconds
-        var intersectBall = svg.select('#n' + ball1.number + '_intersect');
-        intersectBall.attr({ 'cx': interx, 'cy': intery, 'r': 5, 'fill': 'black' })
-            .transition()
-            .duration(500)
-            .attr('r', 0);
-
         // calculate new velocity of each ball.
         var vx1 = (ball1.vx * (ball1.weight - ball2.weight)
             + (2 * ball2.weight * ball2.vx)) / (ball1.weight + ball2.weight);
@@ -286,6 +268,42 @@ function ProcessCollision(ball1, ball2) {
 
             ball2.posX += ball2.vx;
             ball2.posY += ball2.vy;
+
+            if (parseInt(svg.attr('width')) <= (ball1.posX + 2 * BALL_RADIUS)) {
+                ball1.posX = parseInt(svg.attr('width')) - 2 * BALL_RADIUS - 1;
+                ball2.posX += ball2.vx;
+            }
+            if (parseInt(svg.attr('width')) <= (ball2.posX + 2 * BALL_RADIUS)) {
+                ball2.posX = parseInt(svg.attr('width')) - 2 * BALL_RADIUS - 1;
+                ball1.posX += ball1.vx;
+            }
+    
+            if (ball1.posX < 0) {
+                ball1.posX = 1;
+                ball2.posX += ball2.vx;
+            }
+            if (ball2.posX < 0) {
+                ball2.posX = 1;
+                ball1.posX += ball1.vx;
+            }
+    
+            if (parseInt(svg.attr('height')) < (ball1.posY + 2 * BALL_RADIUS)) {
+                ball1.posY = parseInt(svg.attr('height')) - 2 * BALL_RADIUS - 1;
+                ball2.posY += ball2.vy;
+            }
+            if (parseInt(svg.attr('height')) < (ball2.posY + 2 * BALL_RADIUS)) {
+                ball2.posY = parseInt(svg.attr('height')) - 2 * BALL_RADIUS - 1;
+                ball1.posY += ball1.vy;
+            }
+    
+            if (ball1.posY < 0) {
+                ball1.posY = 1;
+                ball2.posY += ball2.vy;
+            }
+            if (ball2.posY < 0) {
+                ball2.posY = 1;
+                ball1.posY += ball1.vy;
+            }
         }
         ball1.Draw();
         ball2.Draw();
@@ -313,12 +331,20 @@ function StartStopGame() {
                     ++numberBallsToPush;
                     secondsOnDomainToday -= 3000;
                 }
-                if(numberBallsToPush> 1) {
+                if(numberBallsToPush > 1) {
                     numberBallsToPush = 1;
                 }
-                while(numberBallsToPush > 0 && balls.length < 100) {
-                    var angleOfAttack = Math.random() * Math.PI;
-                    balls.push(new Ball(svg, 201, 201, globalBallCount++, angleOfAttack, BALL_RADIUS, numberBallsToPush--));
+                while(numberBallsToPush > 0 && balls.length < 5) {
+                    var angleOfAttack = Math.PI + Math.PI/2 + Math.random() * Math.PI/3;
+                    var rightX = parseInt(svg.attr('width')) - 2 * BALL_RADIUS - 1;
+                    var bottomY = parseInt(svg.attr('height')) - 2 * BALL_RADIUS - 1;
+                    var initialSpeed = 15 + Math.random() * 8;
+
+                    var vx = Math.cos(angleOfAttack) * initialSpeed; // velocity x
+                    var vy = Math.sin(angleOfAttack) * initialSpeed; // velocity y            
+        
+                    balls.push(new Ball(svg, rightX, bottomY, globalBallCount++, BALL_RADIUS, vx, vy));
+                    numberBallsToPush--;
                 }
             });
         }, 5000)
