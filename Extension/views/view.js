@@ -43,12 +43,7 @@ d3.select('body')
         }
     });
 
-<<<<<<< HEAD
-function Ball(svg, x, y, number, aoa, weight, initialSpeed) {
-    this.isBallAtRest = (initialSpeed === 0);
-=======
-    function Ball(svg, x, y, number, weight, initialVx, initialVy) {
->>>>>>> develop
+function Ball(svg, x, y, number, weight, initialVx, initialVy) {
     this.radius = weight; // radius and weight same
     this.posX = x; // cx
     this.posY = y; // cy
@@ -119,14 +114,6 @@ function Ball(svg, x, y, number, aoa, weight, initialSpeed) {
             ;
         ball
             .attr("transform", "translate(" + thisobj.posX + "," + thisobj.posY + ")")
-<<<<<<< HEAD
-
-        // intersect ball is used to show collision effect - every ball has it's own intersect ball
-        var intersectBall = ball.enter()
-            .append('circle')
-            .attr({ 'id': 'n' + thisobj.number + '_intersect', 'class': 'intersectBall' });
-=======
->>>>>>> develop
     }
 
     this.Remove = function () {
@@ -155,14 +142,10 @@ function Ball(svg, x, y, number, aoa, weight, initialSpeed) {
     this.Move = function () {
         var svg = thisobj.svg;
 
-<<<<<<< HEAD
-        if (!thisobj.isBallAtRest && !thisobj.lastIsUnderMouse)
-=======
-        if(!(thisobj.vx === 0 && 
-             thisobj.vy === 0 && 
-             thisobj.posY === (parseInt(svg.attr('height')) - 2 * thisobj.radius - 1)) && 
-             !thisobj.lastIsUnderMouse) {
->>>>>>> develop
+        if (!(thisobj.vx === 0 &&
+            thisobj.vy === 0 &&
+            thisobj.posY === (parseInt(svg.attr('height')) - 2 * thisobj.radius - 1)) &&
+            !thisobj.lastIsUnderMouse) {
             this.vy += globalGravityConstant;
         }
 
@@ -210,23 +193,17 @@ function Ball(svg, x, y, number, aoa, weight, initialSpeed) {
 
         if (parseInt(svg.attr('height')) < (thisobj.posY + 2 * thisobj.radius)) {
             thisobj.posY = parseInt(svg.attr('height')) - 2 * thisobj.radius - 1;
-<<<<<<< HEAD
-            thisobj.aoa = 2 * Math.PI - thisobj.aoa;
             if (thisobj.vy < ballPlasticityConstant) {
-                thisobj.isBallAtRest = true;
-=======
-            if(thisobj.vy < ballPlasticityConstant) {
->>>>>>> develop
                 thisobj.vy = 0;
             } else {
                 thisobj.vy = -thisobj.vy + ballPlasticityConstant;
             }
         }
 
-        if(parseInt(svg.attr('height')) <= (thisobj.posY + 2 * thisobj.radius + 1)) {
-            if(thisobj.vx > ballFrictionConstant) {
+        if (parseInt(svg.attr('height')) <= (thisobj.posY + 2 * thisobj.radius + 1)) {
+            if (thisobj.vx > ballFrictionConstant) {
                 thisobj.vx -= ballFrictionConstant;
-            } else if(thisobj.vx < -ballFrictionConstant) {
+            } else if (thisobj.vx < -ballFrictionConstant) {
                 thisobj.vx += ballFrictionConstant;
             } else {
                 thisobj.vx = 0;
@@ -280,17 +257,17 @@ function ProcessCollision(ball1, ball2) {
             + (2 * ball1.weight * ball1.vx)) / (ball1.weight + ball2.weight);
         var vy2 = (ball2.vy * MIN_DIFFERENCE
             + (2 * ball1.weight * ball1.vy)) / (ball1.weight + ball2.weight);
-            if(vx1 < MIN_DIFFERENCE && vx2 < MIN_DIFFERENCE) {
-                var slideMultiplier = Math.abs(ball1.posX - ball2.posX);
-                if(MIN_DIFFERENCE * slideMultiplier > (vx1 + vy1 + vx2 + vy2)) {
-                    slideMultipler = (vx1 + vy1 + vx2 + vy2) / MIN_DIFFERENCE;
-                }
-                if(ball1.posY > ball2.posY) {
-                    vx2 = ((ball1.posX > ball2.posX) ? -MIN_DIFFERENCE : MIN_DIFFERENCE) * slideMultiplier;
-                } else {
-                    vx1 = ((ball1.posX > ball2.posX) ? MIN_DIFFERENCE : -MIN_DIFFERENCE) * slideMultiplier;
-                }
+        if (vx1 < MIN_DIFFERENCE && vx2 < MIN_DIFFERENCE) {
+            var slideMultiplier = Math.abs(ball1.posX - ball2.posX);
+            if (MIN_DIFFERENCE * slideMultiplier > (vx1 + vy1 + vx2 + vy2)) {
+                slideMultipler = (vx1 + vy1 + vx2 + vy2) / MIN_DIFFERENCE;
             }
+            if (ball1.posY > ball2.posY) {
+                vx2 = ((ball1.posX > ball2.posX) ? -MIN_DIFFERENCE : MIN_DIFFERENCE) * slideMultiplier;
+            } else {
+                vx1 = ((ball1.posX > ball2.posX) ? MIN_DIFFERENCE : -MIN_DIFFERENCE) * slideMultiplier;
+            }
+        }
 
         //set velocities for both balls
         ball1.vx = vx1;
@@ -301,7 +278,7 @@ function ProcessCollision(ball1, ball2) {
         var numberChecks = 0;
         //ensure one ball is not inside others. distant apart till not colliding
         while (CheckCollision(ball1, ball2)) {
-            if(numberChecks++ > 100) {
+            if (numberChecks++ > 100) {
                 return;
             }
             ball1.posX += ball1.vx;
@@ -310,10 +287,10 @@ function ProcessCollision(ball1, ball2) {
             ball2.posX += ball2.vx;
             ball2.posY += ball2.vy;
 
-            if (parseInt(svg.attr('width')) <= (ball1.posX + 2 * BALL_RADIUS) || 
+            if (parseInt(svg.attr('width')) <= (ball1.posX + 2 * BALL_RADIUS) ||
                 parseInt(svg.attr('width')) <= (ball2.posX + 2 * BALL_RADIUS)) {
                 var resultingVx = Math.abs(ball1.vx) + Math.abs(ball2.vx);
-                if(ball1.posX > ball2.posX) {
+                if (ball1.posX > ball2.posX) {
                     ball1.posX = parseInt(svg.attr('width')) - 2 * BALL_RADIUS - 1;
                     ball2.posX -= resultingVx;
                 } else {
@@ -321,10 +298,10 @@ function ProcessCollision(ball1, ball2) {
                     ball1.posX -= resultingVx;
                 }
             }
-    
+
             if (ball1.posX < 0 || ball2.posX < 0) {
                 var resultingVx = Math.abs(ball1.vx) + Math.abs(ball2.vx);
-                if(ball2.posX > ball1.posX) {
+                if (ball2.posX > ball1.posX) {
                     ball1.posX = 1;
                     ball2.posX += resultingVx;
                 } else {
@@ -332,22 +309,22 @@ function ProcessCollision(ball1, ball2) {
                     ball1.posX += resultingVx;
                 }
             }
-    
+
             if (parseInt(svg.attr('height')) < (ball1.posY + 2 * BALL_RADIUS) ||
                 parseInt(svg.attr('height')) < (ball2.posY + 2 * BALL_RADIUS)) {
-                    var resultingVy = Math.abs(ball1.vy) + Math.abs(ball2.vy);
-                    if(ball1.posY > ball2.posY) {
-                        ball1.posY = parseInt(svg.attr('height')) - 2 * BALL_RADIUS - 1;
-                        ball2.posY -= resultingVy;
-                    } else {
-                        ball2.posY = parseInt(svg.attr('height')) - 2 * BALL_RADIUS - 1;
-                        ball1.posY -= resultingVy;
-                    }
+                var resultingVy = Math.abs(ball1.vy) + Math.abs(ball2.vy);
+                if (ball1.posY > ball2.posY) {
+                    ball1.posY = parseInt(svg.attr('height')) - 2 * BALL_RADIUS - 1;
+                    ball2.posY -= resultingVy;
+                } else {
+                    ball2.posY = parseInt(svg.attr('height')) - 2 * BALL_RADIUS - 1;
+                    ball1.posY -= resultingVy;
                 }
-    
+            }
+
             if (ball1.posY < 0 || ball2.posY < 0) {
                 var resultingVy = Math.abs(ball1.vy) + Math.abs(ball2.vy);
-                if(ball2.posY > ball1.posY) {
+                if (ball2.posY > ball1.posY) {
                     ball1.posY = 1;
                     ball2.posY += resultingVy;
                 } else {
@@ -382,29 +359,20 @@ function StartStopGame() {
                     ++numberBallsToPush;
                     secondsOnDomainToday -= 3000;
                 }
-<<<<<<< HEAD
                 if (numberBallsToPush > 1) {
                     numberBallsToPush = 1;
                 }
-                while (numberBallsToPush > 0 && balls.length < 100) {
-                    var angleOfAttack = Math.random() * Math.PI;
-                    balls.push(new Ball(svg, 201, 201, globalBallCount++, angleOfAttack, BALL_RADIUS, numberBallsToPush--));
-=======
-                if(numberBallsToPush > 1) {
-                    numberBallsToPush = 1;
-                }
-                while(numberBallsToPush > 0 && balls.length < 5) {
-                    var angleOfAttack = Math.PI + Math.PI/2 + Math.random() * Math.PI/3;
+                while (numberBallsToPush > 0 && balls.length < 5) {
+                    var angleOfAttack = Math.PI + Math.PI / 2 + Math.random() * Math.PI / 3;
                     var rightX = parseInt(svg.attr('width')) - 2 * BALL_RADIUS - 1;
                     var bottomY = parseInt(svg.attr('height')) - 2 * BALL_RADIUS - 1;
                     var initialSpeed = 15 + Math.random() * 8;
 
                     var vx = Math.cos(angleOfAttack) * initialSpeed; // velocity x
-                    var vy = Math.sin(angleOfAttack) * initialSpeed; // velocity y            
-        
+                    var vy = Math.sin(angleOfAttack) * initialSpeed; // velocity y
+
                     balls.push(new Ball(svg, rightX, bottomY, globalBallCount++, BALL_RADIUS, vx, vy));
                     numberBallsToPush--;
->>>>>>> develop
                 }
             });
         }, 5000)
@@ -1343,44 +1311,25 @@ var OverlayView = Backbone.View.extend({
         //     .css('left', this.model.get('x') + 'px')
         //     .css('top', this.model.get('y') + 'px')
         //     .css('opacity', this.model.get('opacity'));
-<<<<<<< HEAD
-        this.model.image.getImageUrlAsync($.proxy(function (imageUrl) {
-            $("#imageId").attr("xlink:href", imageUrl);
-            if (imageUrl) {
-                globalImageCount = 1;
-                defs.append("svg:pattern")
-                    .attr("id", "image_number0")
-=======
         globalImageCount = 0;
         this.model.collection.models.forEach(model => {
             model.image.getImageUrlAsync($.proxy(function (imageUrl) {
-                $("#imageId").attr("xlink:href",imageUrl);
-                if(imageUrl) {
+                $("#imageId").attr("xlink:href", imageUrl);
+                if (imageUrl) {
                     defs.append("svg:pattern")
-                    .attr("id", "image_number" + globalImageCount++)
->>>>>>> develop
-                    .attr("width", BALL_RADIUS * 2)
-                    .attr("height", BALL_RADIUS * 2)
-                    .attr("patternUnits", "userSpaceOnUse")
-                    .append("svg:image")
-                    .attr("xlink:href", imageUrl)
-                    .attr("width", BALL_RADIUS * 2)
-                    .attr("height", BALL_RADIUS * 2)
-                    .attr("x", 0)
-                    .attr("y", 0);
-<<<<<<< HEAD
-            }
-            else {
-                globalImageCount = 0;
-            }
-        }, this));
-
-
-=======
+                        .attr("id", "image_number" + globalImageCount++)
+                        .attr("width", BALL_RADIUS * 2)
+                        .attr("height", BALL_RADIUS * 2)
+                        .attr("patternUnits", "userSpaceOnUse")
+                        .append("svg:image")
+                        .attr("xlink:href", imageUrl)
+                        .attr("width", BALL_RADIUS * 2)
+                        .attr("height", BALL_RADIUS * 2)
+                        .attr("x", 0)
+                        .attr("y", 0);
                 }
             }, this));
-            });
->>>>>>> develop
+        });
     },
 
     setLocked: function (value) {
