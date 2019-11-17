@@ -257,6 +257,9 @@ function ProcessCollision(ball1, ball2) {
             + (2 * ball1.weight * ball1.vy)) / (ball1.weight + ball2.weight);
             if(vx1 < MIN_DIFFERENCE && vx2 < MIN_DIFFERENCE) {
                 var slideMultiplier = Math.abs(ball1.posX - ball2.posX);
+                if(MIN_DIFFERENCE * slideMultiplier > (vx1 + vy1 + vx2 + vy2)) {
+                    slideMultipler = (vx1 + vy1 + vx2 + vy2) / MIN_DIFFERENCE;
+                }
                 if(ball1.posY > ball2.posY) {
                     vx2 = ((ball1.posX > ball2.posX) ? -MIN_DIFFERENCE : MIN_DIFFERENCE) * slideMultiplier;
                 } else {
