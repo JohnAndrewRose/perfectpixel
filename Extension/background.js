@@ -82,7 +82,42 @@ setInterval(
         if(focused != prev_browser_focused)
             prev_browser_focused = focused;
     }), 500);
+
+setInterval(() => {
+    if(!prev_browser_focused)
+        return;
+    chrome.tabs.query({active: true, lastFocusedWindow: true}, function(tabs) {
+        if(tabs.length > 0)
+            active_tab = tabs[0];
+        if(!active_tab)
+            return;
+        if (!active_tab.url.startsWith('http://') && !active_tab.url.startsWith('https://'))
+            return;
+        //if iframed_domain_to_track?
+        //  current_domain = iframed_domain_to_track
+        //else
+        //  current_domain = url_to_domain(active_tab.url)
+        if(active_tab.url.indexOf("://") > -1) {
+            current_domain = [active_tab.url.split('/')[0], "//", active_tab.url.split('/')[2]].join("");
+        }
+        else {
+            current_domain = active_tab.url.split('/')[0];
+        }
+
+        //if (current_idlestate != 'active') and (not is_video_domain(current_domain))
+        //  return
+        current_day = get_days_since_epoch();
+        if(badSites.includes(current_domain)) {
+            var pp_tab_state = PP_state[active_tab.id];
+            if(!pp_tab_state) {
+                PP_state[active_tab.id] = 'open';
+                injectIntoTab(active_tab.id);
+            }
+        }
+    })
+}, 1000);
     
+        
 setInterval (() => {
     if(!prev_browser_focused)
         return;
@@ -107,21 +142,22 @@ setInterval (() => {
         //if (current_idlestate != 'active') and (not is_video_domain(current_domain))
         //  return
         current_day = get_days_since_epoch();
-        
-        chrome.cookies.getAll({url: current_domain}, function(cookies) {
-            var d = new Date();
-            var secondsSinceEpoch = d.getTime() / 1000;
-            let lastSavedDayCookie = cookies.find(cookie => cookie.name === 'LastSavedDay');
-            if(lastSavedDayCookie && parseInt(lastSavedDayCookie.value) === current_day) {
-                var totalElapsedSeconds = parseInt(cookies.find(cookie => cookie.name === 'SecondsOnDomainToday').value);
-                secondsOnCurrentDomain = totalElapsedSeconds + 1;
-            } else {
-                secondsOnCurrentDomain = 0;
-                chrome.cookies.set({ url: current_domain, name: "LastSavedDay", value: String(current_day), expirationDate: secondsSinceEpoch + 60 * 60 * 24 });
+        if(badSites.includes(current_domain)) {
+            chrome.cookies.getAll({url: current_domain}, function(cookies) {
+                var d = new Date();
+                var secondsSinceEpoch = d.getTime() / 1000;
+                let lastSavedDayCookie = cookies.find(cookie => cookie.name === 'LastSavedDay');
+                if(lastSavedDayCookie && parseInt(lastSavedDayCookie.value) === current_day) {
+                    var totalElapsedSeconds = parseInt(cookies.find(cookie => cookie.name === 'SecondsOnDomainToday').value);
+                    secondsOnCurrentDomain = totalElapsedSeconds + 1;
+                } else {
+                    secondsOnCurrentDomain = 0;
+                    chrome.cookies.set({ url: current_domain, name: "LastSavedDay", value: String(current_day), expirationDate: secondsSinceEpoch + 60 * 60 * 24 });
+                }
+                chrome.cookies.set({ url: current_domain, name: "SecondsOnDomainToday", value: String(secondsOnCurrentDomain) , expirationDate: secondsSinceEpoch + 60 * 60 * 24 });
+                
+            })
             }
-            chrome.cookies.set({ url: current_domain, name: "SecondsOnDomainToday", value: String(secondsOnCurrentDomain) , expirationDate: secondsSinceEpoch + 60 * 60 * 24 });
-            
-        })
     })
 }, 1000);
 
@@ -137,6 +173,10 @@ var PP_state = [];
 
 function togglePanel(tabId){
     chrome.tabs.executeScript(tabId, { code: "togglePanel();" });
+}
+
+function activatePanel(tabId){
+    chrome.tabs.executeScript(tabId, { code: "activatePanel();" });
 }
 
 function injectIntoTab(tabId, after_injected_callback){
@@ -189,7 +229,7 @@ function injectIntoTab(tabId, after_injected_callback){
         if (typeof(after_injected_callback) == 'function'){
             after_injected_callback();
         } else {
-            togglePanel(tabId);
+            activatePanel(tabId);
         }
     });
 }
@@ -296,10 +336,6 @@ chrome.runtime.onMessage.addListener(
             settingsObj.defaultLocale = chrome.runtime.getManifest().default_locale;
             settingsObj.version = chrome.runtime.getManifest().version;
             sendResponse(settingsObj);
-            /*chrome.i18n.getAcceptLanguages(function(languages) { // not used anywhere
-                settingsObj.i18n_acceptedLanguages = languages;
-                sendResponse(settingsObj);
-            })*/
         }
 
         // Event listener for tracking
