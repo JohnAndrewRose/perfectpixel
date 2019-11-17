@@ -417,6 +417,11 @@ function OnNumberOfBallsChanged() {
 //==========================================================
 //=========Trying to set goals on screen====================
 //==========================================================
+function getText() {
+    let text = document.getElementById("myTextarea").value;
+    console.log(text);
+    return text;
+}
 
 
 
@@ -865,9 +870,12 @@ var PanelView = Backbone.View.extend({
             '</div>' +
             '<div class="row">' +
             '<div class="col">What are your goals?<br><br>' +
-            '<textarea rows="4" cols="10" placeholder="Type your goals here...">' +
+            '<form id="downFileForm" action="downfile.php" method="post">' +
+            '<textarea  id="mytextarea" rows="4" cols="10" placeholder="Type your goals here...">' +
             '</textarea><br>' +
-            '<button onclick="" type="submit" style="width:60px;height:15px;">Set Goals</button><br><br>' +
+            '</form>' +
+            '<button onclick="" style="width:60px;height:15px;">Set Goals</button><br><br>' +
+            //'<a href="javascript:void(0)" onclick="var f=document.getElementById(\'downFileForm\');if(f){f.submit();}">Text</a>' +
             '</div>' +
             '</div>' +
             '</div>' +
