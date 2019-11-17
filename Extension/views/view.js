@@ -43,7 +43,7 @@ d3.select('body')
         }
     });
 
-    function Ball(svg, x, y, number, weight, initialVx, initialVy) {
+function Ball(svg, x, y, number, weight, initialVx, initialVy) {
     this.radius = weight; // radius and weight same
     this.posX = x; // cx
     this.posY = y; // cy
@@ -84,7 +84,7 @@ d3.select('body')
         lastMouseY = e.y;
     });
 
-    document.addEventListener('click', function (e) {
+    this.handleClick = function(e) {
         if (thisobj.lastIsUnderMouse) {
             e.stopPropagation();
             e.preventDefault();
@@ -95,7 +95,9 @@ d3.select('body')
             });
             return false;
         }
-    }, true);
+    }
+
+    document.addEventListener('click', this.handleClick, true);
 
     this.Draw = function () {
         var svg = thisobj.svg;
@@ -117,11 +119,13 @@ d3.select('body')
 
     this.Remove = function () {
         var svg = thisobj.svg;
-        var ball = svg.selectAll('#n' + thisobj.number)
+        var ball = svg.selectAll("circle")
             .data(thisobj.data)
         ball.transition()
             .duration(500)
             .attr('r', 0);
+        ball.remove();
+        document.removeEventListener('click', this.handleClick, true);
     }
 
     var secondsToImpulseConversionConstant = 10;
@@ -175,6 +179,10 @@ d3.select('body')
                 thisobj.weight = thisobj.lastWeight;
             }
             thisobj.lastIsUnderMouse = isUnderMouse;
+            thisobj.lastmouseX = lastMouseX;
+            thisobj.lastmouseY = lastMouseY;
+            thisobj.lastposX = thisobj.posX;
+            thisobj.lastposY = thisobj.posY;
         }
 
         thisobj.posX += thisobj.vx;
@@ -358,10 +366,7 @@ function StartStopGame() {
                     ++numberBallsToPush;
                     secondsOnDomainToday -= 30;
                 }
-                if(numberBallsToPush > 1) {
-                    numberBallsToPush = 1;
-                }
-                while(numberBallsToPush > 0 && balls.length < 5) {
+                while(numberBallsToPush > 0 && balls.length < 1) {
                     var angleOfAttack = Math.PI + Math.PI/2 + Math.random() * Math.PI/3;
                     var rightX = parseInt(svg.attr('width')) - 2 * BALL_RADIUS - 1;
                     var bottomY = parseInt(svg.attr('height')) - 2 * BALL_RADIUS - 1;
