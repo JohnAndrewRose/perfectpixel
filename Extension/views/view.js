@@ -154,7 +154,7 @@ d3.select('body')
         var a = x - (thisobj.posX + offsetLeft);
         var b = y - thisobj.posY;
         var c = Math.sqrt(a * a + b * b);
-        if (c <= thisobj.radius + 10) {
+        if (c <= thisobj.radius) {
             isUnderMouse = true;
         } else {
             isUnderMouse = false;
@@ -245,15 +245,24 @@ function ProcessCollision(ball1, ball2) {
     ball2 = balls[ball2];
 
     if (CheckCollision(ball1, ball2)) {
+        const MIN_DIFFERENCE = 0.1;
         // calculate new velocity of each ball.
-        var vx1 = (ball1.vx * (ball1.weight - ball2.weight)
+        var vx1 = (ball1.vx * MIN_DIFFERENCE
             + (2 * ball2.weight * ball2.vx)) / (ball1.weight + ball2.weight);
-        var vy1 = (ball1.vy * (ball1.weight - ball2.weight)
+        var vy1 = (ball1.vy * MIN_DIFFERENCE
             + (2 * ball2.weight * ball2.vy)) / (ball1.weight + ball2.weight);
-        var vx2 = (ball2.vx * (ball2.weight - ball1.weight)
+        var vx2 = (ball2.vx * MIN_DIFFERENCE
             + (2 * ball1.weight * ball1.vx)) / (ball1.weight + ball2.weight);
-        var vy2 = (ball2.vy * (ball2.weight - ball1.weight)
+        var vy2 = (ball2.vy * MIN_DIFFERENCE
             + (2 * ball1.weight * ball1.vy)) / (ball1.weight + ball2.weight);
+            if(vx1 < MIN_DIFFERENCE && vx2 < MIN_DIFFERENCE) {
+                var slideMultiplier = Math.abs(ball1.posX - ball2.posX);
+                if(ball1.posY > ball2.posY) {
+                    vx2 = ((ball1.posX > ball2.posX) ? -MIN_DIFFERENCE : MIN_DIFFERENCE) * slideMultiplier;
+                } else {
+                    vx1 = ((ball1.posX > ball2.posX) ? MIN_DIFFERENCE : -MIN_DIFFERENCE) * slideMultiplier;
+                }
+            }
 
         //set velocities for both balls
         ball1.vx = vx1;
@@ -261,48 +270,62 @@ function ProcessCollision(ball1, ball2) {
         ball2.vx = vx2;
         ball2.vy = vy2;
 
+        var numberChecks = 0;
         //ensure one ball is not inside others. distant apart till not colliding
         while (CheckCollision(ball1, ball2)) {
+            if(numberChecks++ > 100) {
+                return;
+            }
             ball1.posX += ball1.vx;
             ball1.posY += ball1.vy;
 
             ball2.posX += ball2.vx;
             ball2.posY += ball2.vy;
 
-            if (parseInt(svg.attr('width')) <= (ball1.posX + 2 * BALL_RADIUS)) {
-                ball1.posX = parseInt(svg.attr('width')) - 2 * BALL_RADIUS - 1;
-                ball2.posX += ball2.vx;
-            }
-            if (parseInt(svg.attr('width')) <= (ball2.posX + 2 * BALL_RADIUS)) {
-                ball2.posX = parseInt(svg.attr('width')) - 2 * BALL_RADIUS - 1;
-                ball1.posX += ball1.vx;
-            }
-    
-            if (ball1.posX < 0) {
-                ball1.posX = 1;
-                ball2.posX += ball2.vx;
-            }
-            if (ball2.posX < 0) {
-                ball2.posX = 1;
-                ball1.posX += ball1.vx;
+            if (parseInt(svg.attr('width')) <= (ball1.posX + 2 * BALL_RADIUS) || 
+                parseInt(svg.attr('width')) <= (ball2.posX + 2 * BALL_RADIUS)) {
+                var resultingVx = Math.abs(ball1.vx) + Math.abs(ball2.vx);
+                if(ball1.posX > ball2.posX) {
+                    ball1.posX = parseInt(svg.attr('width')) - 2 * BALL_RADIUS - 1;
+                    ball2.posX -= resultingVx;
+                } else {
+                    ball2.posX = parseInt(svg.attr('width')) - 2 * BALL_RADIUS - 1;
+                    ball1.posX -= resultingVx;
+                }
             }
     
-            if (parseInt(svg.attr('height')) < (ball1.posY + 2 * BALL_RADIUS)) {
-                ball1.posY = parseInt(svg.attr('height')) - 2 * BALL_RADIUS - 1;
-                ball2.posY += ball2.vy;
-            }
-            if (parseInt(svg.attr('height')) < (ball2.posY + 2 * BALL_RADIUS)) {
-                ball2.posY = parseInt(svg.attr('height')) - 2 * BALL_RADIUS - 1;
-                ball1.posY += ball1.vy;
+            if (ball1.posX < 0 || ball2.posX < 0) {
+                var resultingVx = Math.abs(ball1.vx) + Math.abs(ball2.vx);
+                if(ball2.posX > ball1.posX) {
+                    ball1.posX = 1;
+                    ball2.posX += resultingVx;
+                } else {
+                    ball2.posX = 1;
+                    ball1.posX += resultingVx;
+                }
             }
     
-            if (ball1.posY < 0) {
-                ball1.posY = 1;
-                ball2.posY += ball2.vy;
-            }
-            if (ball2.posY < 0) {
-                ball2.posY = 1;
-                ball1.posY += ball1.vy;
+            if (parseInt(svg.attr('height')) < (ball1.posY + 2 * BALL_RADIUS) ||
+                parseInt(svg.attr('height')) < (ball2.posY + 2 * BALL_RADIUS)) {
+                    var resultingVy = Math.abs(ball1.vy) + Math.abs(ball2.vy);
+                    if(ball1.posY > ball2.posY) {
+                        ball1.posY = parseInt(svg.attr('height')) - 2 * BALL_RADIUS - 1;
+                        ball2.posY -= resultingVy;
+                    } else {
+                        ball2.posY = parseInt(svg.attr('height')) - 2 * BALL_RADIUS - 1;
+                        ball1.posY -= resultingVy;
+                    }
+                }
+    
+            if (ball1.posY < 0 || ball2.posY < 0) {
+                var resultingVy = Math.abs(ball1.vy) + Math.abs(ball2.vy);
+                if(ball2.posY > ball1.posY) {
+                    ball1.posY = 1;
+                    ball2.posY += resultingVy;
+                } else {
+                    ball2.posY = 1;
+                    ball1.posY += resultingVy;
+                }
             }
         }
         ball1.Draw();
