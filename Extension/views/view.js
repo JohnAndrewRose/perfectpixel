@@ -43,8 +43,8 @@ d3.select('body')
         }
     });
 
-    function Ball(svg, x, y, number, aoa, weight, initialSpeed) {
-        this.isBallAtRest = (initialSpeed === 0);
+function Ball(svg, x, y, number, aoa, weight, initialSpeed) {
+    this.isBallAtRest = (initialSpeed === 0);
     this.radius = weight; // radius and weight same
     this.posX = x; // cx
     this.posY = y; // cy
@@ -106,21 +106,23 @@ d3.select('body')
         var ball = svg.selectAll('#n' + thisobj.number)
             .data(thisobj.data)
             ;
-            //"transform": "translate(" + thisobj.posX + "," + thisobj.posY + ")",
+        //"transform": "translate(" + thisobj.posX + "," + thisobj.posY + ")",
         ball.enter()
             .append("circle")
-            .attr({ "id": 'n'+thisobj.number, 'class': 'ball', 'r': thisobj.radius,
-                'cx': thisobj.radius, 'cy': thisobj.radius, 'weight': thisobj.weight })
+            .attr({
+                "id": 'n' + thisobj.number, 'class': 'ball', 'r': thisobj.radius,
+                'cx': thisobj.radius, 'cy': thisobj.radius, 'weight': thisobj.weight
+            })
             .style("fill", "#fff")
             .style("fill", "url(#image_number" + thisobj.number % globalImageCount + ")")
             ;
-            ball
+        ball
             .attr("transform", "translate(" + thisobj.posX + "," + thisobj.posY + ")")
 
         // intersect ball is used to show collision effect - every ball has it's own intersect ball
         var intersectBall = ball.enter()
             .append('circle')
-            .attr({ 'id': 'n'+thisobj.number + '_intersect', 'class': 'intersectBall' });
+            .attr({ 'id': 'n' + thisobj.number + '_intersect', 'class': 'intersectBall' });
     }
 
     this.Remove = function () {
@@ -137,10 +139,10 @@ d3.select('body')
     var ballPlasticityConstant = 1;
 
     this.Impulse = function (upwardImpulseStrength) {
-        if(upwardImpulseStrength > 200) {
+        if (upwardImpulseStrength > 200) {
             upwardImpulseStrength = 200;
         }
-        if(!thisobj.lastIsUnderMouse) {
+        if (!thisobj.lastIsUnderMouse) {
             thisobj.vy -= upwardImpulseStrength / secondsToImpulseConversionConstant;
             thisobj.isBallAtRest = false;
         }
@@ -149,7 +151,7 @@ d3.select('body')
     this.Move = function () {
         var svg = thisobj.svg;
 
-        if(!thisobj.isBallAtRest && !thisobj.lastIsUnderMouse)
+        if (!thisobj.isBallAtRest && !thisobj.lastIsUnderMouse)
             this.vy += globalGravityConstant;
 
         var isUnderMouse = false;
@@ -199,7 +201,7 @@ d3.select('body')
         if (parseInt(svg.attr('height')) < (thisobj.posY + 2 * thisobj.radius)) {
             thisobj.posY = parseInt(svg.attr('height')) - 2 * thisobj.radius - 1;
             thisobj.aoa = 2 * Math.PI - thisobj.aoa;
-            if(thisobj.vy < ballPlasticityConstant) {
+            if (thisobj.vy < ballPlasticityConstant) {
                 thisobj.isBallAtRest = true;
                 thisobj.vy = 0;
             } else {
@@ -306,17 +308,17 @@ function StartStopGame() {
             else
                 return false;
         }, 500);
-        setInterval(function() {
+        setInterval(function () {
             ExtensionService.sendMessage({ type: PP_RequestType.GetElapsedTimeOnDomain }, function (secondsOnDomainToday) {
                 var numberBallsToPush = 0;
-                while(secondsOnDomainToday > 0) {
+                while (secondsOnDomainToday > 0) {
                     ++numberBallsToPush;
                     secondsOnDomainToday -= 3000;
                 }
-                if(numberBallsToPush> 1) {
+                if (numberBallsToPush > 1) {
                     numberBallsToPush = 1;
                 }
-                while(numberBallsToPush > 0 && balls.length < 100) {
+                while (numberBallsToPush > 0 && balls.length < 100) {
                     var angleOfAttack = Math.random() * Math.PI;
                     balls.push(new Ball(svg, 201, 201, globalBallCount++, angleOfAttack, BALL_RADIUS, numberBallsToPush--));
                 }
@@ -359,6 +361,12 @@ function OnNumberOfBallsChanged() {
         balls.push(new this.Ball(svg, 101, 101, 'n' + (i + 1).toString(), color(i), Math.PI / (i + 1), (i % 2) == 0 ? 10 : (10 + i)));
     }
 }
+
+//==========================================================
+//=========Trying to set goals on screen====================
+//==========================================================
+
+
 
 var PanelView = Backbone.View.extend({
     tagName: 'div',
@@ -684,10 +692,10 @@ var PanelView = Backbone.View.extend({
             PerfectPixel.get('overlayInverted')
                 ? ExtensionService.getLocalizedMessage('uninvert_colors')
                 : ExtensionService.getLocalizedMessage('invert_colors'));
-        this.$('#chromeperfectpixel-origin-controls button').button({ disabled: isNoOverlays });
+        /*this.$('#chromeperfectpixel-origin-controls button').button({ disabled: isNoOverlays });
         this.$('input').not('input[type=file]').attr('disabled', function () {
             return isNoOverlays;
-        });
+        });*/
 
         if (overlay) {
             this.$('#chromeperfectpixel-coordX').val(overlay.get('x'));
@@ -726,9 +734,9 @@ var PanelView = Backbone.View.extend({
     render: function () {
 
 
-        var windowHtml = 
-        '<div id="' + this.screenBordersElementId + '">' +
-        '</div>';
+        var windowHtml =
+            '<div id="' + this.screenBordersElementId + '">' +
+            '</div>';
 
 
         $('body').append(this.$el).append(windowHtml);
@@ -737,76 +745,121 @@ var PanelView = Backbone.View.extend({
 
         var panelHtml =
 
-        '<div id="chromeperfectpixel-dropzone-decorator"></div>' +
-        '<div id="chromeperfectpixel-panel-header">' +
-        '<div id="chromeperfectpixel-header-logo" style="background:url(' + ExtensionService.getResourceUrl("images/icons/16.png") + ') center center no-repeat;" title="' + ExtensionService.getLocalizedMessage("toggle_collapsed_mode") + '"></div>' +
-        '<h1>' + ExtensionService.getLocalizedMessage("extension_name_short") + '</h1>' +
-        '</div>' +
-        '<div id="chromeperfectpixel-min-buttons">' +
-        '<div class="chromeperfectpixel-min-showHideBtn"></div>' +
-        '<div class="chromeperfectpixel-min-lockBtn"></div>' +
-        '</div>' +
-        '<div id="chromeperfectpixel-panel-body">' +
-
-        '<div id="chromeperfectpixel-notification-box">' +
-        '<div id="chromeperfectpixel-notification-text"></div>' +
-        '<div id="chromeperfectpixel-closeNotification">x</div>' +
-        '</div>' +
-
-        '<div id="chromeperfectpixel-section">'+
-        '<div id="chromeperfectpixel-section-opacity">' +
-        '<span>' + ExtensionService.getLocalizedMessage("opacity") + ':</span>' +
-        '<input type="range" id="chromeperfectpixel-opacity" min="0" max="1" step="0.01" value="0.5" />' +
-        '</div>' +
-
-        '<div id="chromeperfectpixel-section-origin">' +
-        '<span>' + ExtensionService.getLocalizedMessage("origin") + ':</span>' +
-        '<div id="chromeperfectpixel-origin-controls">' +
-        '<button id="chromeperfectpixel-ymore" data-axis="y" data-offset="-1">&darr;</button>' +
-        '<button id="chromeperfectpixel-yless" data-axis="y" data-offset="1">&uarr;</button>' +
-        '<button id="chromeperfectpixel-xless" data-axis="x" data-offset="1">&larr;</button>' +
-        '<button id="chromeperfectpixel-xmore" data-axis="x" data-offset="-1">&rarr;</button>' +
-        '<div>' +
-        '<div>' +
-
-        '<div class="chromeperfectpixel-coords-label">X:</div>' +
-        '<input type="text" class="chromeperfectpixel-coords" data-axis="x" id="chromeperfectpixel-coordX" value="50" size="2" maxlength="4"/>' +
-        '</div>' +
-
-        '<div>' +
-        '<div class="chromeperfectpixel-coords-label">Y:</div>' +
-        '<input type="text" class="chromeperfectpixel-coords" data-axis="y" id="chromeperfectpixel-coordY" value="50" size="2" maxlength="4"/>' +
-        '</div>' +
-        '</div>' +
-        '</div>' +
-        '</div>' +
-
-        '<div>' + ExtensionService.getLocalizedMessage("layers") + ':</div>' +
-        '<div id="chromeperfectpixel-section-scale">' +
-        '<div id="chromeperfectpixel-section-scale-label">' + ExtensionService.getLocalizedMessage("scale") + ':</div>' +
-        '<input type="number" id="chromeperfectpixel-scale" value="1.0" size="3" min="0.1" max="10" step="0.1"/>' +
-        '</div>' +
-        '<div id="chromeperfectpixel-layers">' +
-            '<div id="chromeperfectpixel-layers-add-btn" class="chromeperfectpixel-layers-btn">' +
-                '<div class="chromeperfectpixel-layers-btn-text">' + ExtensionService.getLocalizedMessage("add_new_layer_top") + '</div>' +
+            '<div id="chromeperfectpixel-dropzone-decorator"></div>' +
+            '<div id="chromeperfectpixel-panel-header">' +
+            '<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css"' +
+            'integrity = "sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin = "anonymous" >' +
+            '<link href="//netdna.bootstrapcdn.com/twitter-bootstrap/2.3.2/css/bootstrap-combined.no-icons.min.css" rel="stylesheet">' +
+            '<link href="//netdna.bootstrapcdn.com/font-awesome/3.2.1/css/font-awesome.css" rel="stylesheet">' +
+            '<div id="chromeperfectpixel-header-logo" style="background:url(' + ExtensionService.getResourceUrl("images/icons/16.png") + ') center center no-repeat;" title="' + ExtensionService.getLocalizedMessage("toggle_collapsed_mode") + '"></div>' +
+            '<h1> Anti-Procratination Dashboard </h1>' +
             '</div>' +
-        '</div>' +
+            '<div id="chromeperfectpixel-min-buttons">' +
+            '<div class="chromeperfectpixel-min-showHideBtn"></div>' +
+            '<div class="chromeperfectpixel-min-lockBtn"></div>' +
+            '</div>' +
+            '<div id="chromeperfectpixel-panel-body">' +
 
-        '<div id="chromeperfectpixel-progressbar-area" style="display: none">' + ExtensionService.getLocalizedMessage("loading")  + '...</div>' +
+            '<div id="chromeperfectpixel-notification-box">' +
+            '<div id="chromeperfectpixel-notification-text"></div>' +
+            '<div id="chromeperfectpixel-closeNotification">x</div>' +
+            '</div>' +
 
-        '<div id="chromeperfectpixel-buttons">' +
-        '<button class="chromeperfectpixel-showHideBtn" title="Hotkey: Alt + S" style="margin-right: 5px; float:left;">' + ExtensionService.getLocalizedMessage("show") + '</button>' +
-        '<button class="chromeperfectpixel-lockBtn" title="Hotkey: Alt + C" style="margin-right: 5px; float:left;">' + ExtensionService.getLocalizedMessage("lock") + '</button>' +
-        '<button class="chromeperfectpixel-invertcolorsBtn" title="Hotkey: Alt + I" style="margin-right: 5px; float:left;">' + ExtensionService.getLocalizedMessage("invert_colors") + '</button>' +
-        '<div id="chromeperfectpixel-upload-area">' +
-        '<button id="chromeperfectpixel-fakefile">' + ExtensionService.getLocalizedMessage("add_new_layer") + '</button>' +
-        '<span><input id="chromeperfectpixel-fileUploader" type="file" accept="image/*" /></span>' +
-        '</div>' +
-        '</div>' +
-        '</div>' +
-        '</div>';
+            '<h2> How do you Procrastinate? </h2><br><br>' +
+            /*
+                        '<div id="chromeperfectpixel-section">' +
+                        '<div id="chromeperfectpixel-section-opacity">' +
+                        '<span>' + ExtensionService.getLocalizedMessage("opacity") + ':</span>' +
+                        '<input type="range" id="chromeperfectpixel-opacity" min="0" max="1" step="0.01" value="0.5" />' +
+                        '</div>' +
+            
+                        '<div id="chromeperfectpixel-section-origin">' +
+                        '<span>' + ExtensionService.getLocalizedMessage("origin") + ':</span>' +
+                        '<div id="chromeperfectpixel-origin-controls">' +
+                        '<button id="chromeperfectpixel-ymore" data-axis="y" data-offset="-1">&darr;</button>' +
+                        '<button id="chromeperfectpixel-yless" data-axis="y" data-offset="1">&uarr;</button>' +
+                        '<button id="chromeperfectpixel-xless" data-axis="x" data-offset="1">&larr;</button>' +
+                        '<button id="chromeperfectpixel-xmore" data-axis="x" data-offset="-1">&rarr;</button>' +
+                        '<div>' +
+                        '<div>' +
+            
+                        '<div class="chromeperfectpixel-coords-label">X:</div>' +
+                        '<input type="text" class="chromeperfectpixel-coords" data-axis="x" id="chromeperfectpixel-coordX" value="50" size="2" maxlength="4"/>' +
+                        '</div>' +
+            
+                        '<div>' +
+                        '<div class="chromeperfectpixel-coords-label">Y:</div>' +
+                        '<input type="text" class="chromeperfectpixel-coords" data-axis="y" id="chromeperfectpixel-coordY" value="50" size="2" maxlength="4"/>' +
+                        '</div>' +
+                        '</div>' +
+                        '</div>' +
+                        '</div>' +*/
 
-    this.$el.append(panelHtml);
+            // Adding Dashboard Area
+            '<div class="container">' +
+            '<div class="row">' +
+            '<div class="col">' +
+            '<h2>Set your goals:</h2><br>' +
+            'Facebook: <input type="number" id="fb" name="min" value="0" min="0" style="width: 3em"> min<br>' +
+            'Amazon: <input type="number" id="am" name="min" value="0" min="0" style="width: 3em"> min<br>' +
+            'Youtube: <input type="number" id="yt" name="min" value="0" min="0" style="width: 3em"> min<br>' +
+            'Reddit: <input type="number" id="rd" name="min" value="0" min="0" style="width: 3em"> min<br>' +
+            '<button onclick="" type="submit" style="width:40px;height:15px;">Save</button><br><br>' +
+            //'Total Procrastination: <input type="text" id="total" name="total" value="0" min="0" style="width: 3em"> min<br>' +
+            '</div>' +
+            '<div class="col">' +
+            '<button onclick="" style="width:80px;height:20px;">Demo Mode</button>' +
+            '</div>' +
+            '</div>' +
+            '<div class="row">' +
+            '<div class="col">What are your goals?<br><br>' +
+            '<textarea rows="4" cols="10" placeholder="Type your goals here...">' +
+            '</textarea><br>' +
+            '<button onclick="" type="submit" style="width:60px;height:15px;">Set Goals</button><br><br>' +
+            '</div>' +
+            '</div>' +
+            '</div>' +
+
+            '<div>' + ExtensionService.getLocalizedMessage("layers") + ':</div>' +
+            '<div id="chromeperfectpixel-section-scale">' +
+            '<div id="chromeperfectpixel-section-scale-label">' + ExtensionService.getLocalizedMessage("scale") + ':</div>' +
+            '<input type="number" id="chromeperfectpixel-scale" value="1.0" size="3" min="0.1" max="10" step="0.1"/>' +
+            '</div>' +
+            '<div id="chromeperfectpixel-layers">' +
+            '<div id="chromeperfectpixel-layers-add-btn" class="chromeperfectpixel-layers-btn">' +
+            '<div class="chromeperfectpixel-layers-btn-text">' + ExtensionService.getLocalizedMessage("add_new_layer_top") + '</div>' +
+            '</div>' +
+            '</div><br><br>' +
+
+            '<div id="chromeperfectpixel-progressbar-area" style="display: none">' + ExtensionService.getLocalizedMessage("loading") + '...</div>' +
+
+
+
+            '<div id="chromeperfectpixel-buttons">' +
+            '<button class="chromeperfectpixel-showHideBtn" title="Hotkey: Alt + S" style="margin-right: 5px; float:left;">' + ExtensionService.getLocalizedMessage("show") + '</button>' +
+            '<button class="chromeperfectpixel-lockBtn" title="Hotkey: Alt + C" style="margin-right: 5px; float:left;">' + ExtensionService.getLocalizedMessage("lock") + '</button>' +
+            '<button class="chromeperfectpixel-invertcolorsBtn" title="Hotkey: Alt + I" style="margin-right: 5px; float:left;">' + ExtensionService.getLocalizedMessage("invert_colors") + '</button>' +
+            '<div id="chromeperfectpixel-upload-area">' +
+            '<button id="chromeperfectpixel-fakefile">' + ExtensionService.getLocalizedMessage("add_new_layer") + '</button>' +
+            '<span><input id="chromeperfectpixel-fileUploader" type="file" accept="image/*" /></span>' +
+            '</div>' +
+            '</div>' +
+            '</div>' +
+            //Adding bootstrap
+            '<script src="https://code.jquery.com/jquery-3.2.1.slim.min.js"' +
+            'integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN"' +
+            'crossorigin="anonymous"></script>' +
+            '<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js"' +
+            'integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q"' +
+            'crossorigin="anonymous"></script>' +
+            '<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"' +
+            'integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl"' +
+            'crossorigin="anonymous"></script>' +
+            '</div>';
+
+
+
+        this.$el.append(panelHtml);
         if (this.options.state == 'collapsed') {
             $panel_body.hide().addClass('collapsed');
             $panel.css('right', (30 - $panel.width()) + 'px');
@@ -1207,20 +1260,20 @@ var OverlayView = Backbone.View.extend({
         //     .css('top', this.model.get('y') + 'px')
         //     .css('opacity', this.model.get('opacity'));
         this.model.image.getImageUrlAsync($.proxy(function (imageUrl) {
-            $("#imageId").attr("xlink:href",imageUrl);
-            if(imageUrl) {
+            $("#imageId").attr("xlink:href", imageUrl);
+            if (imageUrl) {
                 globalImageCount = 1;
                 defs.append("svg:pattern")
-                .attr("id", "image_number0")
-                .attr("width", BALL_RADIUS * 2)
-                .attr("height", BALL_RADIUS * 2)
-                .attr("patternUnits", "userSpaceOnUse")
-                .append("svg:image")
-                .attr("xlink:href", imageUrl)
-                .attr("width", BALL_RADIUS * 2)
-                .attr("height", BALL_RADIUS * 2)
-                .attr("x", 0)
-                .attr("y", 0);
+                    .attr("id", "image_number0")
+                    .attr("width", BALL_RADIUS * 2)
+                    .attr("height", BALL_RADIUS * 2)
+                    .attr("patternUnits", "userSpaceOnUse")
+                    .append("svg:image")
+                    .attr("xlink:href", imageUrl)
+                    .attr("width", BALL_RADIUS * 2)
+                    .attr("height", BALL_RADIUS * 2)
+                    .attr("x", 0)
+                    .attr("y", 0);
             }
             else {
                 globalImageCount = 0;
@@ -1359,3 +1412,5 @@ function getFocusedElement() {
     else
         return null;
 }
+
+
