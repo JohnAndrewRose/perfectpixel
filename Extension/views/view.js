@@ -906,7 +906,7 @@ var PanelView = Backbone.View.extend({
             '<div class="row">' +
             '<div class="col">What are your goals?<br><br>' +
             '<form id="downFileForm" action="downfile.php" method="post">' +
-            '<textarea  id="mytextarea" rows="4" cols="10" placeholder="Type your goals here...">' +
+            '<textarea  id="myTextarea" rows="4" cols="10" placeholder="Type your goals here...">' +
             '</textarea><br>' +
             '</form>' +
             '<div class="ui-button ui-widget ui-state-default ui-corner-all ui-button-text-only chromeperfectpixel-getText" style="width:60px;height:15px;">Set Goals</div><br><br>' +
@@ -914,15 +914,6 @@ var PanelView = Backbone.View.extend({
             //'<a href="javascript:void(0)" onclick="var f=document.getElementById(\'downFileForm\');if(f){f.submit();}">Text</a>' +
             '</div>' +
             '</div>' +
-            '</div>' +
-            '<div>' +
-            ExtensionService.getLocalizedMessage('layers') +
-            ':</div>' +
-            '<div id="chromeperfectpixel-section-scale">' +
-            '<div id="chromeperfectpixel-section-scale-label">' +
-            ExtensionService.getLocalizedMessage('scale') +
-            ':</div>' +
-            '<input type="number" id="chromeperfectpixel-scale" value="1.0" size="3" min="0.1" max="10" step="0.1"/>' +
             '</div>' +
             '<div id="chromeperfectpixel-layers">' +
             '<div id="chromeperfectpixel-layers-add-btn" class="chromeperfectpixel-layers-btn">' +
