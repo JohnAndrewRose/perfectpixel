@@ -84,7 +84,7 @@ function Ball(svg, x, y, number, weight, initialVx, initialVy) {
         lastMouseY = e.y;
     });
 
-    document.addEventListener('click', function (e) {
+    this.handleClick = function (e) {
         if (thisobj.lastIsUnderMouse) {
             e.stopPropagation();
             e.preventDefault();
@@ -95,7 +95,9 @@ function Ball(svg, x, y, number, weight, initialVx, initialVy) {
             });
             return false;
         }
-    }, true);
+    }
+
+    document.addEventListener('click', this.handleClick, true);
 
     this.Draw = function () {
         var svg = thisobj.svg;
@@ -103,6 +105,7 @@ function Ball(svg, x, y, number, weight, initialVx, initialVy) {
             .data(thisobj.data)
             ;
         //"transform": "translate(" + thisobj.posX + "," + thisobj.posY + ")",
+        var fillValue = (globalImageCount > 0) ? "url(#image_number" + thisobj.number % globalImageCount + ")" : "blue";
         ball.enter()
             .append("circle")
             .attr({
@@ -110,7 +113,7 @@ function Ball(svg, x, y, number, weight, initialVx, initialVy) {
                 'cx': thisobj.radius, 'cy': thisobj.radius, 'weight': thisobj.weight
             })
             .style("fill", "#fff")
-            .style("fill", "url(#image_number" + thisobj.number % globalImageCount + ")")
+            .style("fill", fillValue)
             ;
         ball
             .attr("transform", "translate(" + thisobj.posX + "," + thisobj.posY + ")")
@@ -118,11 +121,13 @@ function Ball(svg, x, y, number, weight, initialVx, initialVy) {
 
     this.Remove = function () {
         var svg = thisobj.svg;
-        var ball = svg.selectAll('#n' + thisobj.number)
+        var ball = svg.selectAll("circle")
             .data(thisobj.data)
         ball.transition()
             .duration(500)
             .attr('r', 0);
+        ball.remove();
+        document.removeEventListener('click', this.handleClick, true);
     }
 
     var secondsToImpulseConversionConstant = 10;
@@ -176,6 +181,10 @@ function Ball(svg, x, y, number, weight, initialVx, initialVy) {
                 thisobj.weight = thisobj.lastWeight;
             }
             thisobj.lastIsUnderMouse = isUnderMouse;
+            thisobj.lastmouseX = lastMouseX;
+            thisobj.lastmouseY = lastMouseY;
+            thisobj.lastposX = thisobj.posX;
+            thisobj.lastposY = thisobj.posY;
         }
 
         thisobj.posX += thisobj.vx;
@@ -357,12 +366,9 @@ function StartStopGame() {
                 var numberBallsToPush = 0;
                 while (secondsOnDomainToday > 0) {
                     ++numberBallsToPush;
-                    secondsOnDomainToday -= 3000;
+                    secondsOnDomainToday -= 30;
                 }
-                if (numberBallsToPush > 1) {
-                    numberBallsToPush = 1;
-                }
-                while (numberBallsToPush > 0 && balls.length < 5) {
+                while (numberBallsToPush > 0 && balls.length < 1) {
                     var angleOfAttack = Math.PI + Math.PI / 2 + Math.random() * Math.PI / 3;
                     var rightX = parseInt(svg.attr('width')) - 2 * BALL_RADIUS - 1;
                     var bottomY = parseInt(svg.attr('height')) - 2 * BALL_RADIUS - 1;
@@ -461,6 +467,9 @@ var PanelView = Backbone.View.extend({
         PerfectPixel.notificationModel.on('change:currentNotification', this.updateNotification);
 
         var view = this;
+
+        this.panelShown = true;
+
         ExtensionService.sendMessage({ type: PP_RequestType.getTabId }, function (res) {
             view.model = new Panel({ id: res.tabId });
             view.model.fetch();
@@ -483,6 +492,8 @@ var PanelView = Backbone.View.extend({
                     }
                 });
             }
+            view.togglePanelShown();
+
         });
     },
 
@@ -749,10 +760,10 @@ var PanelView = Backbone.View.extend({
             PerfectPixel.get('overlayInverted')
                 ? ExtensionService.getLocalizedMessage('uninvert_colors')
                 : ExtensionService.getLocalizedMessage('invert_colors'));
-        /*this.$('#chromeperfectpixel-origin-controls button').button({ disabled: isNoOverlays });
-        this.$('input').not('input[type=file]').attr('disabled', function () {
-            return isNoOverlays;
-        });*/
+        // this.$('#chromeperfectpixel-origin-controls button').button({ disabled: isNoOverlays });
+        // this.$('input').not('input[type=file]').attr('disabled', function () {
+        //     return isNoOverlays;
+        // });
 
         if (overlay) {
             this.$('#chromeperfectpixel-coordX').val(overlay.get('x'));
@@ -783,9 +794,12 @@ var PanelView = Backbone.View.extend({
     },
 
     togglePanelShown: function () {
-        $('#chromeperfectpixel-panel').toggle();
-        var new_state = $('#chromeperfectpixel-panel').is(':visible') ? 'open' : 'hidden';
-        ExtensionService.sendMessage({ type: PP_RequestType.PanelStateChange, state: new_state });
+        if (this.panelShown) {
+            $('#chromeperfectpixel-panel').hide();
+        } else {
+            $('#chromeperfectpixel-panel').show();
+        }
+        this.panelShown = !this.panelShown;
     },
 
     render: function () {

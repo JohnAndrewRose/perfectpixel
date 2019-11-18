@@ -42,14 +42,14 @@ var trackEvent = function(senderId, eventType, integerValue, stringValue) {
     );
 };
 
-function togglePanel(state)  {
+function activatePanel(state)  {
     if (this.panelView) {
 
-        if(this.panelView.isFrozen()) {
-            this.panelView.unfreeze();
-        } else {
-            this.panelView.freeze();
-        }
+        // if(this.panelView.isFrozen()) {
+        //     this.panelView.unfreeze();
+        // } else {
+        //     this.panelView.freeze();
+        // }
         //this.panelView.destroy();
         //delete this.panelView;
     }
@@ -75,7 +75,15 @@ function togglePanel(state)  {
         }, this));
 
     }
-}
+};
+
+function togglePanel(state) {
+    if(!this.panelView) {
+        activatePanel(state);
+    } else {
+        this.panelView.togglePanelShown();
+    }
+};
 
 // Listener for events from background.js
 ExtensionService.onMessage.addListener(
