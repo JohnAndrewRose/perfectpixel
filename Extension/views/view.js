@@ -433,11 +433,6 @@ function OnNumberOfBallsChanged() {
 //==========================================================
 //=========Trying to set goals on screen====================
 //==========================================================
-function getText() {
-    let text = document.getElementById('myTextarea').value;
-    console.log(text);
-    return text;
-}
 function getTimeonSites() {
     ExtensionService.sendMessage({ type: PP_RequestType.GetElapsedTimeOnDomain }, function(secondsOnDomainToday) {
         console.log(secondsOnDomainToday);
@@ -467,7 +462,8 @@ var PanelView = Backbone.View.extend({
         'change #chromeperfectpixel-scale': 'changeScale',
         'dblclick #chromeperfectpixel-panel-header': 'panelHeaderDoubleClick',
         'click #chromeperfectpixel-header-logo': 'panelHeaderDoubleClick',
-        'click #chromeperfectpixel-closeNotification': 'closeCurrentNotification'
+        'click #chromeperfectpixel-closeNotification': 'closeCurrentNotification',
+        'click .chromeperfectpixel-getText': 'getText'
     },
 
     initialize: function(options) {
@@ -591,6 +587,12 @@ var PanelView = Backbone.View.extend({
         if ($(ev.currentTarget).is('[disabled]')) return false;
         trackEvent('overlay', PerfectPixel.get('overlayShown') ? 'hide' : 'show');
         PerfectPixel.toggleOverlayShown();
+    },
+
+    getText: function() {
+        let text = document.getElementById('myTextarea').value;
+        console.log(text);
+        return text;
     },
 
     toggleOverlayLocked: function(ev) {
@@ -848,17 +850,13 @@ var PanelView = Backbone.View.extend({
             ') center center no-repeat;" title="' +
             ExtensionService.getLocalizedMessage('toggle_collapsed_mode') +
             '"></div>' +
-            '<h1> Anti-Procratination Dashboard </h1>' +
+            '<h1> Anti-Procrastination Dashboard </h1>' +
             '</div>' +
             '<div id="chromeperfectpixel-min-buttons">' +
             '<div class="chromeperfectpixel-min-showHideBtn"></div>' +
             '<div class="chromeperfectpixel-min-lockBtn"></div>' +
             '</div>' +
             '<div id="chromeperfectpixel-panel-body">' +
-            '<div id="chromeperfectpixel-notification-box">' +
-            '<div id="chromeperfectpixel-notification-text"></div>' +
-            '<div id="chromeperfectpixel-closeNotification">x</div>' +
-            '</div>' +
             '<h2> How do you Procrastinate? </h2><br><br>' +
             /*
                         '<div id="chromeperfectpixel-section">' +
@@ -911,7 +909,7 @@ var PanelView = Backbone.View.extend({
             '<textarea  id="mytextarea" rows="4" cols="10" placeholder="Type your goals here...">' +
             '</textarea><br>' +
             '</form>' +
-            '<button onclick="getText()" style="width:60px;height:15px;">Set Goals</button><br><br>' +
+            '<div class="ui-button ui-widget ui-state-default ui-corner-all ui-button-text-only chromeperfectpixel-getText" style="width:60px;height:15px;">Set Goals</div><br><br>' +
             '<p id="demo"></p>' +
             //'<a href="javascript:void(0)" onclick="var f=document.getElementById(\'downFileForm\');if(f){f.submit();}">Text</a>' +
             '</div>' +
