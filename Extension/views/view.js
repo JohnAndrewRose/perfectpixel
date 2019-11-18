@@ -420,6 +420,9 @@ function OnNumberOfBallsChanged() {
     }
 }
 
+
+
+
 //==========================================================
 //=========Trying to set goals on screen====================
 //==========================================================
@@ -428,8 +431,19 @@ function getText() {
     console.log(text);
     return text;
 }
+function getTimeonSites() {
+    ExtensionService.sendMessage({ type: PP_RequestType.GetElapsedTimeOnDomain }, function (secondsOnDomainToday) {
+        console.log(secondsOnDomainToday);
+    })
+}
 
+getTimeonSites();
 
+getTimeonSites();
+
+getTimeonSites();
+
+getTimeonSites();
 
 var PanelView = Backbone.View.extend({
     tagName: 'div',
@@ -888,7 +902,9 @@ var PanelView = Backbone.View.extend({
             '<textarea  id="mytextarea" rows="4" cols="10" placeholder="Type your goals here...">' +
             '</textarea><br>' +
             '</form>' +
-            '<button onclick="" style="width:60px;height:15px;">Set Goals</button><br><br>' +
+            '<button onclick="getText()" style="width:60px;height:15px;">Set Goals</button><br><br>' +
+            '<p id="demo"></p>' +
+
             //'<a href="javascript:void(0)" onclick="var f=document.getElementById(\'downFileForm\');if(f){f.submit();}">Text</a>' +
             '</div>' +
             '</div>' +
@@ -1483,5 +1499,4 @@ function getFocusedElement() {
     else
         return null;
 }
-
 

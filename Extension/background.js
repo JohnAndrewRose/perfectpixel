@@ -61,7 +61,7 @@ $(document).ready(function () {
         var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
     }
     // because default icon is "disabled" we need to check all tabs
-    chrome.tabs.getAllInWindow(null, function(tabs){
+    chrome.tabs.getAllInWindow(null, function (tabs) {
         for (var i = 0; i < tabs.length; i++) {
             check_if_PP_available_for_tab(tabs[i]);
         }
@@ -71,25 +71,25 @@ $(document).ready(function () {
 function get_days_since_epoch() {
     start_of_epoch = moment().year(2016).month(0).date(1).hours(0).minutes(0).seconds(0).milliseconds(0)
     return moment().diff(start_of_epoch, 'days')
-  }
+}
 
 
 var prev_browser_focused = false;
 var secondsOnCurrentDomain = 0;
 setInterval(
-    chrome.windows.getCurrent(function(browser) {
+    chrome.windows.getCurrent(function (browser) {
         focused = browser.focused;
-        if(focused != prev_browser_focused)
+        if (focused != prev_browser_focused)
             prev_browser_focused = focused;
     }), 500);
 
 setInterval(() => {
-    if(!prev_browser_focused)
+    if (!prev_browser_focused)
         return;
-    chrome.tabs.query({active: true, lastFocusedWindow: true}, function(tabs) {
-        if(tabs.length > 0)
+    chrome.tabs.query({ active: true, lastFocusedWindow: true }, function (tabs) {
+        if (tabs.length > 0)
             active_tab = tabs[0];
-        if(!active_tab)
+        if (!active_tab)
             return;
         if (!active_tab.url.startsWith('http://') && !active_tab.url.startsWith('https://'))
             return;
@@ -97,7 +97,7 @@ setInterval(() => {
         //  current_domain = iframed_domain_to_track
         //else
         //  current_domain = url_to_domain(active_tab.url)
-        if(active_tab.url.indexOf("://") > -1) {
+        if (active_tab.url.indexOf("://") > -1) {
             current_domain = [active_tab.url.split('/')[0], "//", active_tab.url.split('/')[2]].join("");
         }
         else {
@@ -106,25 +106,27 @@ setInterval(() => {
 
         //if (current_idlestate != 'active') and (not is_video_domain(current_domain))
         //  return
+        let badSites = ['https://www.youtube.com/', 'https://www.facebook.com/', 'https://www.reddit.com/', 'https://www.amazon.com/'];
+
         current_day = get_days_since_epoch();
-        if(badSites.includes(current_domain)) {
+        if (badSites.includes(current_domain)) {
             var pp_tab_state = PP_state[active_tab.id];
-            if(!pp_tab_state) {
+            if (!pp_tab_state) {
                 PP_state[active_tab.id] = 'open';
                 injectIntoTab(active_tab.id);
             }
         }
     })
 }, 1000);
-    
-        
-setInterval (() => {
-    if(!prev_browser_focused)
+
+
+setInterval(() => {
+    if (!prev_browser_focused)
         return;
-    chrome.tabs.query({active: true, lastFocusedWindow: true}, function(tabs) {
-        if(tabs.length > 0)
+    chrome.tabs.query({ active: true, lastFocusedWindow: true }, function (tabs) {
+        if (tabs.length > 0)
             active_tab = tabs[0];
-        if(!active_tab)
+        if (!active_tab)
             return;
         if (!active_tab.url.startsWith('http://') && !active_tab.url.startsWith('https://'))
             return;
@@ -132,7 +134,7 @@ setInterval (() => {
         //  current_domain = iframed_domain_to_track
         //else
         //  current_domain = url_to_domain(active_tab.url)
-        if(active_tab.url.indexOf("://") > -1) {
+        if (active_tab.url.indexOf("://") > -1) {
             current_domain = [active_tab.url.split('/')[0], "//", active_tab.url.split('/')[2]].join("");
         }
         else {
@@ -141,25 +143,37 @@ setInterval (() => {
 
         //if (current_idlestate != 'active') and (not is_video_domain(current_domain))
         //  return
+        let timeOnSitesData = new Object();
+
         current_day = get_days_since_epoch();
-        if(badSites.includes(current_domain)) {
-            chrome.cookies.getAll({url: current_domain}, function(cookies) {
+        if (badSites.includes(current_domain)) {
+            chrome.cookies.getAll({ url: current_domain }, function (cookies) {
                 var d = new Date();
                 var secondsSinceEpoch = d.getTime() / 1000;
                 let lastSavedDayCookie = cookies.find(cookie => cookie.name === 'LastSavedDay');
-                if(lastSavedDayCookie && parseInt(lastSavedDayCookie.value) === current_day) {
+                if (lastSavedDayCookie && parseInt(lastSavedDayCookie.value) === current_day) {
                     var totalElapsedSeconds = parseInt(cookies.find(cookie => cookie.name === 'SecondsOnDomainToday').value);
                     secondsOnCurrentDomain = totalElapsedSeconds + 1;
                 } else {
                     secondsOnCurrentDomain = 0;
                     chrome.cookies.set({ url: current_domain, name: "LastSavedDay", value: String(current_day), expirationDate: secondsSinceEpoch + 60 * 60 * 24 });
                 }
-                chrome.cookies.set({ url: current_domain, name: "SecondsOnDomainToday", value: String(secondsOnCurrentDomain) , expirationDate: secondsSinceEpoch + 60 * 60 * 24 });
-                
+
+                chrome.cookies.set({ url: current_domain, name: "SecondsOnDomainToday", value: String(secondsOnCurrentDomain), expirationDate: secondsSinceEpoch + 60 * 60 * 24 });
+
             })
+            while (badSites.includes(current_domain)) {
+                timeOnSitesData.current_domain = secondsOnCurrentDomain;
+                console.log(timeOnSitesData.current_domain);
             }
+
+        }
     })
 }, 1000);
+
+
+
+
 
 // here we store panel' state for every tab
 var PP_state = [];
@@ -171,21 +185,21 @@ var PP_state = [];
 //      "js": [ "jquery-1.6.2.min.js", "jquery-ui.js", "pp-shared.js", "storage/pp-storage-localStorage.js", "storage/pp-storage-filesystem.js", "pp-content.js"]
 //  }]
 
-function togglePanel(tabId){
+function togglePanel(tabId) {
     chrome.tabs.executeScript(tabId, { code: "togglePanel();" });
 }
 
-function activatePanel(tabId){
+function activatePanel(tabId) {
     chrome.tabs.executeScript(tabId, { code: "activatePanel();" });
 }
 
-function injectIntoTab(tabId, after_injected_callback){
+function injectIntoTab(tabId, after_injected_callback) {
     if (settings.get("enableStatistics")) {
         _gaq.push(['_trackPageview']); // Tracking
 
         // Track settings on each load
         var settingsAsObj = settings.toObject();
-        for(var optionName in settingsAsObj) {
+        for (var optionName in settingsAsObj) {
             var optionValue = settingsAsObj[optionName];
             var uncapitalizedOptionName = optionName.replace(/([a-z])([A-Z])/g, '$1_$2').toLowerCase();
             trackEvent("settings", uncapitalizedOptionName, null, String(optionValue), true); // Put in queue
@@ -196,7 +210,7 @@ function injectIntoTab(tabId, after_injected_callback){
     chrome.tabs.insertCSS(tabId, { file: "styles/jquery-ui-1.10.2.modified.min.css" });
     chrome.tabs.insertCSS(tabId, { file: "styles/compact-layers-section.css" });
     var customCssCode = settings.get("customCssCode");
-    if (customCssCode) chrome.tabs.insertCSS(tabId, { code: customCssCode});
+    if (customCssCode) chrome.tabs.insertCSS(tabId, { code: customCssCode });
 
     var scripts = [
         '3rd-party/jquery-1.9.1.min.js',
@@ -219,14 +233,14 @@ function injectIntoTab(tabId, after_injected_callback){
     ];
     function executeScripts(scripts, after_executed_callback) {
         var script = scripts.shift();
-        if (script){
-            chrome.tabs.executeScript(null, { file: script }, function(){ executeScripts(scripts,after_executed_callback)});
+        if (script) {
+            chrome.tabs.executeScript(null, { file: script }, function () { executeScripts(scripts, after_executed_callback) });
         } else {
             after_executed_callback();
         }
     };
-    executeScripts(scripts,function(){
-        if (typeof(after_injected_callback) == 'function'){
+    executeScripts(scripts, function () {
+        if (typeof (after_injected_callback) == 'function') {
             after_injected_callback();
         } else {
             activatePanel(tabId);
@@ -234,14 +248,14 @@ function injectIntoTab(tabId, after_injected_callback){
     });
 }
 
-function check_if_PP_available_for_tab(tab){
+function check_if_PP_available_for_tab(tab) {
     var icon = 'images/icons/icon.png';
-    if (tab.url.match(/^chrome:/) || tab.url.match(/^https:\/\/chrome.google.com\/webstore/)){
+    if (tab.url.match(/^chrome:/) || tab.url.match(/^https:\/\/chrome.google.com\/webstore/)) {
         //do nothing
-    } else if (tab.url.match(/file:\//)){
+    } else if (tab.url.match(/file:\//)) {
         // if it's a file url we need to check if PP is allowed
-        chrome.extension.isAllowedFileSchemeAccess(function(isAllowedAccess){
-            if (isAllowedAccess){
+        chrome.extension.isAllowedFileSchemeAccess(function (isAllowedAccess) {
+            if (isAllowedAccess) {
                 set_icon(icon);
                 set_popup('');
             }
@@ -257,15 +271,15 @@ function check_if_PP_available_for_tab(tab){
     }
 
     // usefull shortcuts
-    function set_popup(popup){
-        chrome.browserAction.setPopup({tabId: tab.id, popup: popup})
+    function set_popup(popup) {
+        chrome.browserAction.setPopup({ tabId: tab.id, popup: popup })
     }
-    function set_icon(icon){
-        chrome.browserAction.setIcon({path:chrome.extension.getURL(icon), tabId:tab.id })
+    function set_icon(icon) {
+        chrome.browserAction.setIcon({ path: chrome.extension.getURL(icon), tabId: tab.id })
     }
 }
 
-chrome.tabs.onUpdated.addListener(function(tabId, changeInfo, tab) {
+chrome.tabs.onUpdated.addListener(function (tabId, changeInfo, tab) {
     if (changeInfo.status != 'loading') return;
     check_if_PP_available_for_tab(tab);
 });
@@ -273,11 +287,11 @@ chrome.tabs.onUpdated.addListener(function(tabId, changeInfo, tab) {
 //React when a browser' action icon is clicked.
 chrome.browserAction.onClicked.addListener(function (tab) {
     var pp_tab_state = PP_state[tab.id];
-    if(!pp_tab_state) {
+    if (!pp_tab_state) {
         PP_state[tab.id] = 'open';
         injectIntoTab(tab.id);
     } else {
-        if(pp_tab_state == 'open')
+        if (pp_tab_state == 'open')
             PP_state[tab.id] = 'closed';
         else if (pp_tab_state == 'closed')
             PP_state[tab.id] = 'open';
@@ -286,33 +300,33 @@ chrome.browserAction.onClicked.addListener(function (tab) {
 });
 
 // On tab (re)load check if we need to open panel
-chrome.tabs.onUpdated.addListener(function(tabId, changeInfo) {
+chrome.tabs.onUpdated.addListener(function (tabId, changeInfo) {
     var pp_tab_state = PP_state[tabId];
-    if (!settings.get('rememberPanelOpenClosedState')){
+    if (!settings.get('rememberPanelOpenClosedState')) {
         // we need to set this to 'closed' to prevent issue with page reloading while panel is opened
         //PP_state[tabId] = 'closed';
         delete PP_state[tabId];
         return;
     }
-    else if (! pp_tab_state || pp_tab_state == 'closed') {
+    else if (!pp_tab_state || pp_tab_state == 'closed') {
         return;
     }
     // if pp_tab_state == "open" - need to open it
     if (changeInfo.status === 'complete') { //this means that tab was loaded
-        if (! PP_state[tabId]) PP_state[tabId] = 'open';
+        if (!PP_state[tabId]) PP_state[tabId] = 'open';
         injectIntoTab(tabId);
     }
 });
 
 chrome.runtime.onMessage.addListener(
-    function(request, sender, sendResponse) {
+    function (request, sender, sendResponse) {
 
-        if (request.type == PP_RequestType.getTabId){
+        if (request.type == PP_RequestType.getTabId) {
             sendResponse({ tabId: sender.tab.id });
         }
 
         else if (request.type == PP_RequestType.ExecuteScript) {
-            chrome.tabs.executeScript(sender.tab.id, request.options, function(result) {
+            chrome.tabs.executeScript(sender.tab.id, request.options, function (result) {
                 sendResponse(result);
             });
         }
@@ -320,11 +334,11 @@ chrome.runtime.onMessage.addListener(
         else if (request.type == PP_RequestType.OpenSettingsPage) {
             var optionsUrl = chrome.extension.getURL('fancy-settings/source/index.html');
 
-            chrome.tabs.query({url: optionsUrl}, function(tabs) {
+            chrome.tabs.query({ url: optionsUrl }, function (tabs) {
                 if (tabs.length) {
-                    chrome.tabs.update(tabs[0].id, {active: true});
+                    chrome.tabs.update(tabs[0].id, { active: true });
                 } else {
-                    chrome.tabs.create({url: optionsUrl});
+                    chrome.tabs.create({ url: optionsUrl });
                 }
                 sendResponse();
             });
@@ -352,8 +366,8 @@ chrome.runtime.onMessage.addListener(
 
         // Event listener for file operations
         else if (request.type == PP_RequestType.GETFILE
-        || request.type == PP_RequestType.ADDFILE
-        || request.type == PP_RequestType.DELETEFILE) {
+            || request.type == PP_RequestType.ADDFILE
+            || request.type == PP_RequestType.DELETEFILE) {
 
             PPFileManager.Init(function (responseArgs) {
                 if (request.type == PP_RequestType.GETFILE) {
@@ -395,7 +409,7 @@ chrome.runtime.onMessage.addListener(
 
         //Event save closed notification
         else if (request.type == PP_RequestType.SetNotifications) {
-            if (!localStorage[request.keyName] || parseInt(localStorage[request.keyName]) < parseInt(request.notifyId)){
+            if (!localStorage[request.keyName] || parseInt(localStorage[request.keyName]) < parseInt(request.notifyId)) {
                 localStorage[request.keyName] = request.notifyId;
             }
             sendMessageToAllTabs(
@@ -412,7 +426,7 @@ chrome.runtime.onMessage.addListener(
         }
 
         else if (request.type == PP_RequestType.GetElapsedTimeOnDomain) {
-            sendResponse(secondsOnCurrentDomain);
+            sendResponse(timeOnSitesData);
         }
 
         return true;
@@ -420,24 +434,21 @@ chrome.runtime.onMessage.addListener(
 );
 
 // Sends message to PerfectPixel content script in specific tab
-function sendMessageToTab(tabId, data, callback)
-{
+function sendMessageToTab(tabId, data, callback) {
     chrome.tabs.sendMessage(tabId, data, callback);
 }
 
 // Sends message to PerfectPixel content script in all tabs
-function sendMessageToAllTabs(data)
-{
-    chrome.tabs.query({ status:"complete" }, function(tabs) {
-        for(var i=0; i<tabs.length; i++) {
+function sendMessageToAllTabs(data) {
+    chrome.tabs.query({ status: "complete" }, function (tabs) {
+        for (var i = 0; i < tabs.length; i++) {
             chrome.tabs.sendMessage(tabs[i].id, data);
         }
     });
 }
 
 var _trackEventsQueue = [];
-function trackEvent(senderId, eventType, integerValue, stringValue, putInQueue)
-{
+function trackEvent(senderId, eventType, integerValue, stringValue, putInQueue) {
     if (senderId == "settings" || settings.get("enableStatistics")) {
         var params = ['_trackEvent', senderId, eventType];
 
@@ -454,15 +465,15 @@ function trackEvent(senderId, eventType, integerValue, stringValue, putInQueue)
             params.push(stringValue);
         }
 
-        if(putInQueue) {
+        if (putInQueue) {
             _trackEventsQueue.push(params);
         } else {
             _gaq.push(params);
         }
     }
 }
-setInterval(function() {
-    if(_trackEventsQueue.length > 0) {
+setInterval(function () {
+    if (_trackEventsQueue.length > 0) {
         var eventParams = _trackEventsQueue.pop();
         _gaq.push(eventParams);
     }
@@ -471,23 +482,23 @@ setInterval(function() {
 function sendPPFileResponse(ppFile, sendResponse) {
     if (ppFile instanceof PPFile)
         sendResponse(
-        {
-            status: "OK",
-            fileName: ppFile.Name,
-            fileType: ppFile.MimeType,
-            arrayBuffer: bufferToString(ppFile.ArrayBuffer)
-        });
+            {
+                status: "OK",
+                fileName: ppFile.Name,
+                fileType: ppFile.MimeType,
+                arrayBuffer: bufferToString(ppFile.ArrayBuffer)
+            });
     else if (ppFile) {
         sendResponse(
-        {
-            status: "FAIL",
-            message: ppFile.message,
-            showToUser: ppFile.showToUser
-        });
+            {
+                status: "FAIL",
+                message: ppFile.message,
+                showToUser: ppFile.showToUser
+            });
     }
     else
         sendResponse(
-        {
-            status: "FAIL"
-        });
+            {
+                status: "FAIL"
+            });
 }
