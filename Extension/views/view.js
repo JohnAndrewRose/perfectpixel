@@ -356,31 +356,29 @@ function StartStopGame() {
                     if (timeOnSitesData[site].isCurrentDomain) {
                         var secondsOnDomainToday = timeOnSitesData[site].secondsOnCurrentDomain;
                         var numberBallsToPush = 0;
-                secondsOnDomainToday -= 30 / DEMO_SPEED;
+                        secondsOnDomainToday -= 30 / DEMO_SPEED;
                         while (secondsOnDomainToday > 0) {
                             ++numberBallsToPush;
-                    secondsOnDomainToday -= 30 / DEMO_SPEED;
+                            secondsOnDomainToday -= 30 / DEMO_SPEED;
                         }
-                while(numberBallsToPush > 0 && balls.length < 10) {
+                        while(numberBallsToPush > 0 && balls.length < 5) {
                             var angleOfAttack = Math.PI + Math.PI / 2 + (Math.random() * Math.PI) / 3;
                             var rightX = parseInt(svg.attr('width')) - 2 * BALL_RADIUS - 1;
                             var bottomY = parseInt(svg.attr('height')) - 2 * BALL_RADIUS - 1;
-                    var initialSpeed = 10 + numberBallsToPush + Math.random() * 8;
+                            var initialSpeed = 10 + numberBallsToPush + Math.random() * 8;
 
                             var vx = Math.cos(angleOfAttack) * initialSpeed; // velocity x
                             var vy = Math.sin(angleOfAttack) * initialSpeed; // velocity y
 
                             balls.push(new Ball(svg, rightX, bottomY, globalBallCount++, BALL_RADIUS, vx, vy));
-                            numberBallsToPush--;
+                            numberBallsToPush = 0;
                         }
                     }
                 });
-        }, 30000 / DEMO_SPEED)
+            });
+        }, 30000 / DEMO_SPEED);
         startStopFlag = 1;
         //document.getElementById('startStop').innerHTML = 'Stop';
-    } else {
-        //startStopFlag = null;
-        //document.getElementById('startStop').innerHTML = 'Start';
     }
 }
 
