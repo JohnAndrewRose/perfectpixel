@@ -92,6 +92,10 @@ var badSites = new function () {
     return ["https://www.amazon.com", "https://www.facebook.com", "https://www.reddit.com", "https://www.youtube.com"]
 }
 
+var badSiteShortNames = new function () {
+    return ["amazon", "facebook", "reddit", "youtube"];
+}
+
 // --------------------------------------------------------------
 // PP_Background_RequestType - enum for extension background page -> content script requests
 // --------------------------------------------------------------

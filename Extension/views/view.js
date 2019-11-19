@@ -337,7 +337,7 @@ function ProcessCollision(ball1, ball2) {
     }
 }
 
-const DEMO_SPEED = 10;
+const DEMO_SPEED = 2;
 
 function StartStopGame() {
     if (startStopFlag == null) {
@@ -353,16 +353,19 @@ function StartStopGame() {
         }, 500);
         setInterval(function() {
             ExtensionService.sendMessage({ type: PP_RequestType.GetElapsedTimeOnDomain }, function(timeOnSitesData) {
-                badSites.forEach(site => {
+                badSites.forEach(function(site, index) {
                     if (timeOnSitesData[site].isCurrentDomain) {
                         var secondsOnDomainToday = timeOnSitesData[site].secondsOnCurrentDomain;
+                        var goalMinutes = parseInt(goalObject[badSiteShortNames[index] + 'Goal']);
                         var numberBallsToPush = 0;
-                        secondsOnDomainToday -= 30 / DEMO_SPEED;
-                        while (secondsOnDomainToday > 0) {
-                            ++numberBallsToPush;
-                            secondsOnDomainToday -= 30 / DEMO_SPEED;
+                        if(goalObject[badSiteShortNames[index] + 'Goal'] && (secondsOnDomainToday / 60) > goalMinutes) {
+                            secondsOnDomainToday -= (goalMinutes * 60);
+                            while (secondsOnDomainToday > 0 && numberBallsToPush < 5) {
+                                ++numberBallsToPush;
+                                secondsOnDomainToday -= 30 / DEMO_SPEED;
+                            }
                         }
-                        while(numberBallsToPush > 0 && balls.length < 5) {
+                        while(numberBallsToPush > 0 && balls.length < 5 && balls.length < numberBallsToPush) {
                             var angleOfAttack = Math.PI + Math.PI / 2 + (Math.random() * Math.PI) / 3;
                             var rightX = parseInt(svg.attr('width')) - 2 * BALL_RADIUS - 1;
                             var bottomY = parseInt(svg.attr('height')) - 2 * BALL_RADIUS - 1;
