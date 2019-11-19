@@ -495,7 +495,9 @@ var PanelView = Backbone.View.extend({
 
         setInterval(function() {
             ExtensionService.sendMessage({ type: PP_RequestType.GetGoals }, function(goals) {
-                if(goals.timestamp > goalObject.timestamp || goalObject === undefined || goalObject.timestamp === undefined) {
+                if(goals.timestamp > goalObject.timestamp ||
+                    ((goalObject === undefined || goalObject.timestamp === undefined) &&
+                     goals !== undefined && goals.timestamp !== undefined )) {
                     Object.assign(goalObject, goals);
                     document.getElementById('myTextarea').value = goalObject.goalText;
                     document.getElementById('youtubeGoal').value = goalObject.youtubeGoal;
@@ -904,11 +906,9 @@ var PanelView = Backbone.View.extend({
             '</div>' +
             '<div class="row">' +
             '<div class="col">What are your goals?<br><br>' +
-            '<form id="downFileForm" action="downfile.php" method="post">' +
             '<textarea  id="myTextarea" rows="4" cols="10" placeholder="Type your goals here...">' +
             '</textarea><br>' +
             '<button id="saveGoals" type="submit" style="width:40px;height:15px;">Save</button><br><br>' +
-            '</form>' +
             '<p id="demo"></p>' +
             //'<a href="javascript:void(0)" onclick="var f=document.getElementById(\'downFileForm\');if(f){f.submit();}">Text</a>' +
             '</div>' +
