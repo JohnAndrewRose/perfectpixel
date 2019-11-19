@@ -34,7 +34,7 @@ var globalBallCount = 0;
 var globalImageCount = 0;
 var goalObject = {};
 // I always like to handle ESC key
-d3.select('body').on('keydown', function() {
+d3.select('body').on('keydown', function () {
     if (balls.length == 0) return;
     console.log(d3.event);
     if (d3.event.keyCode == 27) {
@@ -70,7 +70,7 @@ function Ball(svg, x, y, number, weight, initialVx, initialVy) {
     this.initialPosY = this.posY;
 
     // when speed changes, go to initial setting
-    this.GoToInitialSettings = function(newjumpSize) {
+    this.GoToInitialSettings = function (newjumpSize) {
         thisobj.posX = thisobj.initialPosX;
         thisobj.posY = thisobj.initialPosY;
         thisobj.vx = Math.cos(thisobj.aoa) * newjumpSize; // velocity x
@@ -78,18 +78,18 @@ function Ball(svg, x, y, number, weight, initialVx, initialVy) {
         thisobj.Draw();
     };
 
-    document.addEventListener('mousemove', function(e) {
+    document.addEventListener('mousemove', function (e) {
         lastMouseX = e.x;
         lastMouseY = e.y;
     });
 
-    this.handleClick = function(e) {
+    this.handleClick = function (e) {
         if (thisobj.lastIsUnderMouse) {
             e.stopPropagation();
             e.preventDefault();
             thisobj.Remove();
             var index = balls.indexOf(thisobj);
-            balls = balls.filter(function(elem, _index) {
+            balls = balls.filter(function (elem, _index) {
                 return index != _index;
             });
             return false;
@@ -98,7 +98,7 @@ function Ball(svg, x, y, number, weight, initialVx, initialVy) {
 
     document.addEventListener('click', this.handleClick, true);
 
-    this.Draw = function() {
+    this.Draw = function () {
         var svg = thisobj.svg;
         var ball = svg.selectAll('#n' + thisobj.number).data(thisobj.data);
         //"transform": "translate(" + thisobj.posX + "," + thisobj.posY + ")",
@@ -118,7 +118,7 @@ function Ball(svg, x, y, number, weight, initialVx, initialVy) {
         ball.attr('transform', 'translate(' + thisobj.posX + ',' + thisobj.posY + ')');
     };
 
-    this.Remove = function() {
+    this.Remove = function () {
         var svg = thisobj.svg;
         var ball = svg.selectAll('#n' + thisobj.number)
             .data(thisobj.data)
@@ -133,7 +133,7 @@ function Ball(svg, x, y, number, weight, initialVx, initialVy) {
     var ballPlasticityConstant = 1;
     var ballFrictionConstant = 0.1;
 
-    this.Move = function() {
+    this.Move = function () {
         var svg = thisobj.svg;
 
         if (
@@ -341,7 +341,7 @@ const DEMO_SPEED = 2;
 
 function StartStopGame() {
     if (startStopFlag == null) {
-        d3.timer(function() {
+        d3.timer(function () {
             for (var i = 0; i < balls.length; ++i) {
                 var r = balls[i].Move();
                 for (var j = i + 1; j < balls.length; ++j) {
@@ -351,21 +351,21 @@ function StartStopGame() {
             if (startStopFlag == null) return true;
             else return false;
         }, 500);
-        setInterval(function() {
-            ExtensionService.sendMessage({ type: PP_RequestType.GetElapsedTimeOnDomain }, function(timeOnSitesData) {
-                badSites.forEach(function(site, index) {
+        setInterval(function () {
+            ExtensionService.sendMessage({ type: PP_RequestType.GetElapsedTimeOnDomain }, function (timeOnSitesData) {
+                badSites.forEach(function (site, index) {
                     if (timeOnSitesData[site].isCurrentDomain) {
                         var secondsOnDomainToday = timeOnSitesData[site].secondsOnCurrentDomain;
                         var goalMinutes = parseInt(goalObject[badSiteShortNames[index] + 'Goal']);
                         var numberBallsToPush = 0;
-                        if(goalObject[badSiteShortNames[index] + 'Goal'] && (secondsOnDomainToday / 60) > goalMinutes) {
+                        if (goalObject[badSiteShortNames[index] + 'Goal'] && (secondsOnDomainToday / 60) > goalMinutes) {
                             secondsOnDomainToday -= (goalMinutes * 60);
                         }
                         while (secondsOnDomainToday > 0 && numberBallsToPush < 5) {
                             ++numberBallsToPush;
                             secondsOnDomainToday -= 30 / DEMO_SPEED;
                         }
-                        while(numberBallsToPush > 0 && balls.length < 5 && balls.length < numberBallsToPush) {
+                        while (numberBallsToPush > 0 && balls.length < 5 && balls.length < numberBallsToPush) {
                             var angleOfAttack = Math.PI + Math.PI / 2 + (Math.random() * Math.PI) / 3;
                             var rightX = parseInt(svg.attr('width')) - 2 * BALL_RADIUS - 1;
                             var bottomY = parseInt(svg.attr('height')) - 2 * BALL_RADIUS - 1;
@@ -390,14 +390,14 @@ function OnSpeedChange() {
     var o = document.getElementById('speed');
     if (startStopFlag != null) startStopFlag = null; // by setting startStopFlag to null, callback of d3.timer will return true and animation will stop
 
-    setTimeout(function() {
+    setTimeout(function () {
         // go to initial position set new speed (ideally should not go to initial position)
         for (var i = 0; i < balls.length; ++i) {
             var o = document.getElementById('speed');
             newjumpSize = o.options[o.selectedIndex].value;
             balls[i].GoToInitialSettings(parseInt(newjumpSize));
         }
-        setTimeout(function() {
+        setTimeout(function () {
             StartStopGame();
         }, 1000);
     }, 500);
@@ -428,6 +428,22 @@ function OnNumberOfBallsChanged() {
 //==========================================================
 //=========Trying to set goals on screen====================
 //==========================================================
+function drawText() {
+    var svgContainer = d3.select("body").append("svg")
+        .attr("width", 200)
+        .attr("height", 200);
+
+    //Add the SVG Text Element to the svgContainer
+    var text = svgContainer.selectAll("text")
+        .data(goalObject.goalText)
+        .enter()
+        .append("text");
+    console.log(goalObject.goalText);
+}
+//after here just have to display it on the screen on the svg already created, now it is showing on the left edge
+//I was thinking right edge
+
+
 var PanelView = Backbone.View.extend({
     tagName: 'div',
     className: 'chromeperfectpixel-panel',
@@ -455,7 +471,7 @@ var PanelView = Backbone.View.extend({
         'click #saveGoals': 'saveGoals'
     },
 
-    initialize: function(options) {
+    initialize: function (options) {
         _.bindAll(this);
         PerfectPixel.bind('change', this.update);
         PerfectPixel.overlays.bind('add', this.appendOverlay);
@@ -468,7 +484,7 @@ var PanelView = Backbone.View.extend({
 
         this.panelShown = true;
 
-        ExtensionService.sendMessage({ type: PP_RequestType.getTabId }, function(res) {
+        ExtensionService.sendMessage({ type: PP_RequestType.getTabId }, function (res) {
             view.model = new Panel({ id: res.tabId });
             view.model.fetch();
             view.listenTo(view.model, 'change', view.updatePanel);
@@ -493,11 +509,11 @@ var PanelView = Backbone.View.extend({
             view.togglePanelShown();
         });
 
-        setInterval(function() {
-            ExtensionService.sendMessage({ type: PP_RequestType.GetGoals }, function(goals) {
-                if(goals.timestamp > goalObject.timestamp ||
+        setInterval(function () {
+            ExtensionService.sendMessage({ type: PP_RequestType.GetGoals }, function (goals) {
+                if (goals.timestamp > goalObject.timestamp ||
                     ((goalObject === undefined || goalObject.timestamp === undefined) &&
-                     goals !== undefined && goals.timestamp !== undefined )) {
+                        goals !== undefined && goals.timestamp !== undefined)) {
                     Object.assign(goalObject, goals);
                     document.getElementById('myTextarea').value = goalObject.goalText;
                     document.getElementById('youtubeGoal').value = goalObject.youtubeGoal;
@@ -507,16 +523,16 @@ var PanelView = Backbone.View.extend({
                 }
             });
         }, 1000);
-},
+    },
 
-    updatePanel: function(obj) {
+    updatePanel: function (obj) {
         this.$el.toggleClass('hidden', obj.attributes.hidden);
         this.$el.toggleClass('vertical', obj.attributes.vertical);
         if (!this.panelUpdatedFirstTime) {
             this.$el.addClass('collapsing');
             this.$el.toggleClass('collapsed', obj.attributes.collapsed, {
                 duration: 250,
-                complete: $.proxy(function() {
+                complete: $.proxy(function () {
                     this.$el.removeClass('collapsing');
                 }, this)
             });
@@ -532,7 +548,7 @@ var PanelView = Backbone.View.extend({
         this.panelUpdatedFirstTime = false;
     },
 
-    appendOverlay: function(overlay) {
+    appendOverlay: function (overlay) {
         var itemView = new OverlayItemView({
             model: overlay
         });
@@ -541,19 +557,19 @@ var PanelView = Backbone.View.extend({
         this.update();
     },
 
-    reloadOverlays: function() {
+    reloadOverlays: function () {
         this.$('#chromeperfectpixel-layers')
             .prevAll('#chromeperfectpixel-layers-add-btn')
             .remove();
         PerfectPixel.overlays.each(
-            $.proxy(function(overlay) {
+            $.proxy(function (overlay) {
                 this.appendOverlay(overlay);
             }, this)
         );
         this.update();
     },
 
-    upload: function(file) {
+    upload: function (file) {
         // Only process image files.
         if (!file.type.match('image.*')) {
             alert('File must contain image');
@@ -565,7 +581,7 @@ var PanelView = Backbone.View.extend({
         var overlay = new Overlay();
         overlay.uploadFile(
             file,
-            $.proxy(function() {
+            $.proxy(function () {
                 this.$('#chromeperfectpixel-progressbar-area').hide();
                 var uploader = this.$('#chromeperfectpixel-fileUploader');
 
@@ -587,13 +603,13 @@ var PanelView = Backbone.View.extend({
         );
     },
 
-    toggleOverlayShown: function(ev) {
+    toggleOverlayShown: function (ev) {
         if ($(ev.currentTarget).is('[disabled]')) return false;
         trackEvent('overlay', PerfectPixel.get('overlayShown') ? 'hide' : 'show');
         PerfectPixel.toggleOverlayShown();
     },
 
-    saveGoals: function() {
+    saveGoals: function () {
         goalObject = {};
         goalObject.goalText = document.getElementById('myTextarea').value;
         goalObject.youtubeGoal = document.getElementById('youtubeGoal').value;
@@ -604,19 +620,19 @@ var PanelView = Backbone.View.extend({
         ExtensionService.sendMessage({ type: PP_RequestType.SetGoals, goals: goalObject });
     },
 
-    toggleOverlayLocked: function(ev) {
+    toggleOverlayLocked: function (ev) {
         if ($(ev.currentTarget).is('[disabled]')) return false;
         trackEvent('overlay', PerfectPixel.get('overlayLocked') ? 'unlock' : 'lock');
         PerfectPixel.toggleOverlayLocked();
     },
 
-    toggleOverlayInverted: function(ev) {
+    toggleOverlayInverted: function (ev) {
         if ($(ev.currentTarget).is('[disabled]')) return false;
         trackEvent('overlay', PerfectPixel.get('overlayInverted') ? 'un-invert' : 'invert');
         PerfectPixel.toggleOverlayInverted();
     },
 
-    originButtonClick: function(e) {
+    originButtonClick: function (e) {
         var button = this.$(e.currentTarget);
         trackEvent('coords', button.attr('id').replace('chromeperfectpixel-', ''));
         var overlay = PerfectPixel.getCurrentOverlay();
@@ -632,7 +648,7 @@ var PanelView = Backbone.View.extend({
         }
     },
 
-    changeOrigin: function(e) {
+    changeOrigin: function (e) {
         var input = $(e.currentTarget);
         trackEvent('coords', input.attr('id').replace('chromeperfectpixel-', ''));
         var overlay = PerfectPixel.getCurrentOverlay();
@@ -655,7 +671,7 @@ var PanelView = Backbone.View.extend({
         }
     },
 
-    changeOpacity: function(e) {
+    changeOpacity: function (e) {
         if (this.$(e.currentTarget).is(':disabled')) {
             // chrome bug if version < 15.0; opacity input isn't actually disabled
             return;
@@ -669,11 +685,11 @@ var PanelView = Backbone.View.extend({
         }
     },
 
-    onOpacityChanged: function(e) {
+    onOpacityChanged: function (e) {
         trackEvent('opacity', e.type, e.currentTarget.value * 100); // GA tracks only integers not floats
     },
 
-    changeScale: function(e) {
+    changeScale: function (e) {
         var input = this.$(e.currentTarget);
         var value = input.val();
         trackEvent('scale', e.type, value * 10);
@@ -684,7 +700,7 @@ var PanelView = Backbone.View.extend({
         }
     },
 
-    panelHeaderDoubleClick: function(e) {
+    panelHeaderDoubleClick: function (e) {
         trackEvent(
             this.$(e.currentTarget)
                 .attr('id')
@@ -695,13 +711,13 @@ var PanelView = Backbone.View.extend({
         this.model.toggleCollapsed();
     },
 
-    closeCurrentNotification: function(e) {
+    closeCurrentNotification: function (e) {
         var myNotify = PerfectPixel.notificationModel.getCurrentNotification();
         trackEvent('notification', 'close', null, myNotify.get('id'));
         PerfectPixel.notificationModel.closeCurrentNotification();
     },
 
-    keyDown: function(e) {
+    keyDown: function (e) {
         if ($(e.target).is('.title[contenteditable]')) return;
         var overlay = PerfectPixel.getCurrentOverlay();
         var isTargetInput = $(e.target).is('input');
@@ -756,7 +772,7 @@ var PanelView = Backbone.View.extend({
         e.preventDefault();
     },
 
-    update: function() {
+    update: function () {
         var overlay = PerfectPixel.getCurrentOverlay();
         if (overlay && PerfectPixel.get('overlayShown')) {
             if (!this.overlayView) {
@@ -814,7 +830,7 @@ var PanelView = Backbone.View.extend({
         }
     },
 
-    updateNotification: function() {
+    updateNotification: function () {
         var myNotify = PerfectPixel.notificationModel.getCurrentNotification(),
             box = $('#chromeperfectpixel-notification-box'),
             textDiv = $('#chromeperfectpixel-notification-text'),
@@ -829,7 +845,7 @@ var PanelView = Backbone.View.extend({
         }
     },
 
-    togglePanelShown: function() {
+    togglePanelShown: function () {
         if (this.panelShown) {
             $('#chromeperfectpixel-panel').hide();
         } else {
@@ -838,7 +854,7 @@ var PanelView = Backbone.View.extend({
         this.panelShown = !this.panelShown;
     },
 
-    render: function() {
+    render: function () {
         var windowHtml = '<div id="' + this.screenBordersElementId + '">' + '</div>';
 
         $('body')
@@ -942,14 +958,14 @@ var PanelView = Backbone.View.extend({
             $('#chromeperfectpixel-min-buttons').show();
         }
 
-        this.$('#chromeperfectpixel-fakefile').bind('click', function(e) {
+        this.$('#chromeperfectpixel-fakefile').bind('click', function (e) {
             trackEvent('layer', 'add', PerfectPixel.overlays.size() + 1);
             $(this)
                 .parent()
                 .find('input[type=file]')
                 .click();
         });
-        this.$('#chromeperfectpixel-layers-add-btn').bind('click', function(e) {
+        this.$('#chromeperfectpixel-layers-add-btn').bind('click', function (e) {
             trackEvent('layer', 'add-top-btn', PerfectPixel.overlays.size() + 1);
             $('#chromeperfectpixel-fakefile')
                 .parent()
@@ -959,13 +975,13 @@ var PanelView = Backbone.View.extend({
         this._bindFileUploader();
 
         // Workaround to catch single value of opacity during opacity HTML element change
-        (function(el, timeout) {
+        (function (el, timeout) {
             var prevVal = el.val();
             var timer,
-                trig = function() {
+                trig = function () {
                     el.trigger('changed');
                 };
-            setInterval(function() {
+            setInterval(function () {
                 var currentVal = el.val();
                 if (currentVal != prevVal) {
                     if (timer) {
@@ -985,7 +1001,7 @@ var PanelView = Backbone.View.extend({
             snap: '#' + this.screenBordersElementId,
             snapMode: 'inner',
             scroll: false,
-            stop: function(event, ui) {
+            stop: function (event, ui) {
                 var $window = $(window),
                     screenWidth = $window.width(),
                     screenHeight = $('#' + view.screenBordersElementId).height(),
@@ -1036,7 +1052,7 @@ var PanelView = Backbone.View.extend({
 
                 panelModel.save(new_params);
             },
-            start: function() {
+            start: function () {
                 $('#chromeperfectpixel-panel')
                     .css({ bottom: 'auto', right: 'auto' })
                     .removeClass('attached-top attached-left attached-right attached-bottom');
@@ -1056,7 +1072,7 @@ var PanelView = Backbone.View.extend({
         this.update();
     },
 
-    destroy: function() {
+    destroy: function () {
         //Global hotkeys off
         if (ExtOptions.enableHotkeys) {
             $('body').off('keydown', this.keyDown);
@@ -1075,15 +1091,15 @@ var PanelView = Backbone.View.extend({
      *
      * @private
      */
-    _bindFileUploader: function() {
+    _bindFileUploader: function () {
         var self = this;
         var uploader = this.$('#chromeperfectpixel-fileUploader');
-        uploader.bind('change', function() {
+        uploader.bind('change', function () {
             self.upload(this.files[0]);
         });
     },
 
-    _initializeD3: function(containerId) {
+    _initializeD3: function (containerId) {
         var test = d3.select('#' + containerId);
         var height = test[0][0].clientHeight; //document.getElementById(containerId).clientHeight;
         var width = test[0][0].clientWidth; //document.getElementById(containerId).clientWidth;
@@ -1114,21 +1130,21 @@ var PanelView = Backbone.View.extend({
         return svg;
     },
 
-    _initDropzone: function() {
+    _initDropzone: function () {
         var self = this;
         var dropzone = this.$el;
         var decorator = this.$('#chromeperfectpixel-dropzone-decorator');
 
-        dropzone.on('dragover', function(e) {
+        dropzone.on('dragover', function (e) {
             e.originalEvent.dataTransfer.dropEffect = 'copy';
             e.preventDefault();
             e.stopPropagation();
             decorator.addClass('chromeperfectpixel-dropzone-decorator-hover');
         });
-        dropzone.on('dragleave', function(e) {
+        dropzone.on('dragleave', function (e) {
             decorator.removeClass('chromeperfectpixel-dropzone-decorator-hover');
         });
-        dropzone.on('drop', function(e) {
+        dropzone.on('drop', function (e) {
             e.preventDefault();
             e.stopPropagation();
             decorator.removeClass('chromeperfectpixel-dropzone-decorator-hover');
@@ -1158,7 +1174,7 @@ var PanelView = Backbone.View.extend({
         console.log('PP Dropzone initialized');
     },
 
-    _isMobileEnvironment: function() {
+    _isMobileEnvironment: function () {
         try {
             document.createEvent('TouchEvent');
             return true;
@@ -1167,14 +1183,14 @@ var PanelView = Backbone.View.extend({
         }
     },
 
-    isFrozen: function() {
+    isFrozen: function () {
         return this._isFrozen;
     },
 
     /**
      * Hide panel, disable all global events
      */
-    freeze: function() {
+    freeze: function () {
         this.$el.hide();
         if (this.overlayView) {
             this.overlayView.freeze();
@@ -1188,7 +1204,7 @@ var PanelView = Backbone.View.extend({
     /**
      * Show panel, enable all global events
      */
-    unfreeze: function() {
+    unfreeze: function () {
         this.$el.show();
         if (this.overlayView) {
             this.overlayView.unfreeze();
@@ -1217,7 +1233,7 @@ var OverlayItemView = Backbone.View.extend({
         'click input[name="chromeperfectpixel-selectedLayer"]': 'setCurrentOverlay'
     },
 
-    initialize: function() {
+    initialize: function () {
         _.bindAll(this);
 
         this.model.bind('change', this.render);
@@ -1227,15 +1243,15 @@ var OverlayItemView = Backbone.View.extend({
         this.update();
     },
 
-    setCurrentOverlay: function() {
+    setCurrentOverlay: function () {
         PerfectPixel.setCurrentOverlay(this.model);
     },
 
-    update: function() {
+    update: function () {
         this.$el.toggleClass('current', PerfectPixel.isOverlayCurrent(this.model));
     },
 
-    titleKeyDown: function(e) {
+    titleKeyDown: function (e) {
         e.stopPropagation();
         if (e.keyCode == 13) {
             $(e.target).blur();
@@ -1251,7 +1267,7 @@ var OverlayItemView = Backbone.View.extend({
             if (s.extentOffset == s.baseOffset) return false; // when (s.extentOffset != s.baseOffset) text is selected
         }
     },
-    titleBlur: function(e) {
+    titleBlur: function (e) {
         var $title = $(e.target);
         this.model.save({ title: $title.text() });
         if (!$title.text()) {
@@ -1259,7 +1275,7 @@ var OverlayItemView = Backbone.View.extend({
         }
     },
 
-    dblClick: function() {
+    dblClick: function () {
         if (this.$el.find('.title').size() == 0) {
             var $title = $(this.title_template)
                 .text('title')
@@ -1276,7 +1292,7 @@ var OverlayItemView = Backbone.View.extend({
         selection.addRange(range);
     },
 
-    render: function() {
+    render: function () {
         if (this.$el.find('.chromeperfectpixel-delete').size() == 0) {
             var checkbox = $('<input type=radio name="chromeperfectpixel-selectedLayer" />');
             this.$el.append(checkbox);
@@ -1291,7 +1307,7 @@ var OverlayItemView = Backbone.View.extend({
         }
 
         this.model.image.getThumbnailUrlAsync(
-            $.proxy(function(thumbUrl) {
+            $.proxy(function (thumbUrl) {
                 thumbUrl && this.$el.css({ 'background-image': 'url(' + thumbUrl + ')' });
             }, this)
         );
@@ -1299,11 +1315,11 @@ var OverlayItemView = Backbone.View.extend({
         return this;
     },
 
-    unrender: function() {
+    unrender: function () {
         this.$el.remove();
     },
 
-    remove: function() {
+    remove: function () {
         var deleteLayerConfirmationMessage = ExtensionService.getLocalizedMessage(
             'are_you_sure_you_want_to_delete_layer'
         );
@@ -1332,7 +1348,7 @@ var OverlayView = Backbone.View.extend({
         mousewheel: 'mousewheel'
     },
 
-    initialize: function() {
+    initialize: function () {
         _.bindAll(this);
         PerfectPixel.bind('change:currentOverlayId', this.updateModel);
         this.updateModel(false);
@@ -1342,7 +1358,7 @@ var OverlayView = Backbone.View.extend({
      *
      * @param [updateOverlay]
      */
-    updateModel: function(updateOverlay) {
+    updateModel: function (updateOverlay) {
         updateOverlay === undefined && (updateOverlay = true);
         var overlay = PerfectPixel.getCurrentOverlay();
         if (overlay) {
@@ -1353,7 +1369,7 @@ var OverlayView = Backbone.View.extend({
         }
     },
 
-    updateOverlay: function() {
+    updateOverlay: function () {
         // var width = this.model.get('width') * this.model.get('scale');
         // this.$el.css('width', width + 'px')
         //     .css('left', this.model.get('x') + 'px')
@@ -1363,7 +1379,7 @@ var OverlayView = Backbone.View.extend({
         globalImageCount = 0;
         this.model.collection.models.forEach(model => {
             model.image.getImageUrlAsync(
-                $.proxy(function(imageUrl) {
+                $.proxy(function (imageUrl) {
                     $('#imageId').attr('xlink:href', imageUrl);
                     if (imageUrl) {
                         defs.append('svg:pattern')
@@ -1383,18 +1399,18 @@ var OverlayView = Backbone.View.extend({
         });
     },
 
-    setLocked: function(value) {
+    setLocked: function (value) {
         this.$el.css('pointer-events', value ? 'none' : 'auto');
     },
 
-    setInverted: function(value) {
+    setInverted: function (value) {
         this.$el.css({
             '-webkit-filter': value ? 'invert(100%)' : '',
             filter: value ? 'invert(100%)' : ''
         });
     },
 
-    mousewheel: function(e) {
+    mousewheel: function (e) {
         if (ExtOptions.enableMousewheelOpacity) {
             if (e.originalEvent.wheelDelta < 0) {
                 this.model.save({ opacity: Number(this.model.get('opacity')) - 0.05 });
@@ -1406,7 +1422,7 @@ var OverlayView = Backbone.View.extend({
         }
     },
 
-    startDrag: function(e, ui) {
+    startDrag: function (e, ui) {
         // If focus is on PP panel input's remove it to allow arrow hotkeys work on overlay
         var focusedElem = $(getFocusedElement());
         if (
@@ -1423,7 +1439,7 @@ var OverlayView = Backbone.View.extend({
         ui.helper.data('PPSmart.stickBorder', null);
     },
 
-    drag: function(e, ui) {
+    drag: function (e, ui) {
         var overlay = PerfectPixel.getCurrentOverlay();
         var newPosition = ui.position;
 
@@ -1467,14 +1483,14 @@ var OverlayView = Backbone.View.extend({
         return newPosition;
     },
 
-    stopDrag: function(e, ui) {
+    stopDrag: function (e, ui) {
         var overlay = PerfectPixel.getCurrentOverlay();
         if (overlay) {
             PerfectPixel.moveCurrentOverlay({ x: ui.position.left, y: ui.position.top });
         }
     },
 
-    render: function() {
+    render: function () {
         this.$el.css({
             'z-index': this.zIndex,
             margin: 0,
@@ -1493,16 +1509,16 @@ var OverlayView = Backbone.View.extend({
         return this;
     },
 
-    unrender: function() {
+    unrender: function () {
         $(this.el).remove();
     },
 
-    freeze: function() {
+    freeze: function () {
         this._wasVisibleUponFrozen = $(this.el).is(':visible');
         this.$el.hide();
     },
 
-    unfreeze: function() {
+    unfreeze: function () {
         if (this._wasVisibleUponFrozen) this.$el.show();
     }
 });
