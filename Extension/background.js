@@ -87,6 +87,9 @@ var prev_browser_focused = false;
 var secondsOnCurrentDomain = 0;
 var timeOnSitesData = {};
 var siteGoals = {};
+// here we store panel' state for every tab
+var PP_state = [];
+
 setInterval(
     chrome.windows.getCurrent(function(browser) {
         focused = browser.focused;
@@ -185,8 +188,6 @@ setInterval(() => {
     });
 }, 1000);
 
-// here we store panel' state for every tab
-var PP_state = [];
 
 // For debug add these lines to manifest
 //  "content_scripts": [{
@@ -307,24 +308,24 @@ chrome.browserAction.onClicked.addListener(function(tab) {
     }
 });
 
-// On tab (re)load check if we need to open panel
-chrome.tabs.onUpdated.addListener(function(tabId, changeInfo) {
-    var pp_tab_state = PP_state[tabId];
-    if (!settings.get('rememberPanelOpenClosedState')) {
-        // we need to set this to 'closed' to prevent issue with page reloading while panel is opened
-        //PP_state[tabId] = 'closed';
-        delete PP_state[tabId];
-        return;
-    } else if (!pp_tab_state || pp_tab_state == 'closed') {
-        return;
-    }
-    // if pp_tab_state == "open" - need to open it
-    if (changeInfo.status === 'complete') {
-        //this means that tab was loaded
-        if (!PP_state[tabId]) PP_state[tabId] = 'open';
-        injectIntoTab(tabId);
-    }
-});
+// // On tab (re)load check if we need to open panel
+// chrome.tabs.onUpdated.addListener(function(tabId, changeInfo) {
+//     var pp_tab_state = PP_state[tabId];
+//     if (!settings.get('rememberPanelOpenClosedState')) {
+//         // we need to set this to 'closed' to prevent issue with page reloading while panel is opened
+//         //PP_state[tabId] = 'closed';
+//         delete PP_state[tabId];
+//         return;
+//     } else if (!pp_tab_state || pp_tab_state == 'closed') {
+//         return;
+//     }
+//     // if pp_tab_state == "open" - need to open it
+//     if (changeInfo.status === 'complete') {
+//         //this means that tab was loaded
+//         if (!PP_state[tabId]) PP_state[tabId] = 'open';
+//         injectIntoTab(tabId);
+//     }
+// });
 
 chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
     if (request.type == PP_RequestType.getTabId) {

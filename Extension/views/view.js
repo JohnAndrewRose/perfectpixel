@@ -360,10 +360,10 @@ function StartStopGame() {
                         var numberBallsToPush = 0;
                         if(goalObject[badSiteShortNames[index] + 'Goal'] && (secondsOnDomainToday / 60) > goalMinutes) {
                             secondsOnDomainToday -= (goalMinutes * 60);
-                            while (secondsOnDomainToday > 0 && numberBallsToPush < 5) {
-                                ++numberBallsToPush;
-                                secondsOnDomainToday -= 30 / DEMO_SPEED;
-                            }
+                        }
+                        while (secondsOnDomainToday > 0 && numberBallsToPush < 5) {
+                            ++numberBallsToPush;
+                            secondsOnDomainToday -= 30 / DEMO_SPEED;
                         }
                         while(numberBallsToPush > 0 && balls.length < 5 && balls.length < numberBallsToPush) {
                             var angleOfAttack = Math.PI + Math.PI / 2 + (Math.random() * Math.PI) / 3;
@@ -848,10 +848,6 @@ var PanelView = Backbone.View.extend({
         var panelHtml =
             '<div id="chromeperfectpixel-dropzone-decorator"></div>' +
             '<div id="chromeperfectpixel-panel-header">' +
-            '<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css"' +
-            'integrity = "sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin = "anonymous" >' +
-            '<link href="//netdna.bootstrapcdn.com/twitter-bootstrap/2.3.2/css/bootstrap-combined.no-icons.min.css" rel="stylesheet">' +
-            '<link href="//netdna.bootstrapcdn.com/font-awesome/3.2.1/css/font-awesome.css" rel="stylesheet">' +
             '<div id="chromeperfectpixel-header-logo" style="background:url(' +
             ExtensionService.getResourceUrl('images/icons/16.png') +
             ') center center no-repeat;" title="' +
@@ -903,11 +899,7 @@ var PanelView = Backbone.View.extend({
             'Amazon: <input type="number" id="amazonGoal" name="min" value="0" min="0" style="width: 3em"> min<br>' +
             'Youtube: <input type="number" id="youtubeGoal" name="min" value="0" min="0" style="width: 3em"> min<br>' +
             'Reddit: <input type="number" id="redditGoal" name="min" value="0" min="0" style="width: 3em"> min<br>' +
-            '<button id="saveGoals" type="submit" style="width:40px;height:15px;">Save</button><br><br>' +
             //'Total Procrastination: <input type="text" id="total" name="total" value="0" min="0" style="width: 3em"> min<br>' +
-            '</div>' +
-            '<div class="col">' +
-            '<button onclick="" style="width:80px;height:20px;">Demo Mode</button>' +
             '</div>' +
             '</div>' +
             '<div class="row">' +
@@ -915,6 +907,7 @@ var PanelView = Backbone.View.extend({
             '<form id="downFileForm" action="downfile.php" method="post">' +
             '<textarea  id="myTextarea" rows="4" cols="10" placeholder="Type your goals here...">' +
             '</textarea><br>' +
+            '<button id="saveGoals" type="submit" style="width:40px;height:15px;">Save</button><br><br>' +
             '</form>' +
             '<p id="demo"></p>' +
             //'<a href="javascript:void(0)" onclick="var f=document.getElementById(\'downFileForm\');if(f){f.submit();}">Text</a>' +
@@ -932,15 +925,6 @@ var PanelView = Backbone.View.extend({
             ExtensionService.getLocalizedMessage('loading') +
             '...</div>' +
             '<div id="chromeperfectpixel-buttons">' +
-            '<button class="chromeperfectpixel-showHideBtn" title="Hotkey: Alt + S" style="margin-right: 5px; float:left;">' +
-            ExtensionService.getLocalizedMessage('show') +
-            '</button>' +
-            '<button class="chromeperfectpixel-lockBtn" title="Hotkey: Alt + C" style="margin-right: 5px; float:left;">' +
-            ExtensionService.getLocalizedMessage('lock') +
-            '</button>' +
-            '<button class="chromeperfectpixel-invertcolorsBtn" title="Hotkey: Alt + I" style="margin-right: 5px; float:left;">' +
-            ExtensionService.getLocalizedMessage('invert_colors') +
-            '</button>' +
             '<div id="chromeperfectpixel-upload-area">' +
             '<button id="chromeperfectpixel-fakefile">' +
             ExtensionService.getLocalizedMessage('add_new_layer') +
@@ -949,16 +933,6 @@ var PanelView = Backbone.View.extend({
             '</div>' +
             '</div>' +
             '</div>' +
-            //Adding bootstrap
-            '<script src="https://code.jquery.com/jquery-3.2.1.slim.min.js"' +
-            'integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN"' +
-            'crossorigin="anonymous"></script>' +
-            '<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js"' +
-            'integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q"' +
-            'crossorigin="anonymous"></script>' +
-            '<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"' +
-            'integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl"' +
-            'crossorigin="anonymous"></script>' +
             '</div>';
 
         this.$el.append(panelHtml);
