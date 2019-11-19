@@ -366,19 +366,15 @@ function StartStopGame() {
                             secondsOnDomainToday -= 30 / DEMO_SPEED;
                         }
                         while (numberBallsToPush > 0 && balls.length < 5 && balls.length < numberBallsToPush) {
-                            drawText();
-                            // if(globalBallCount % globalImageCount === 0) {
-                            //     drawText();
-                            // }
-                            // var angleOfAttack = Math.PI + Math.PI / 2 + (Math.random() * Math.PI) / 3;
-                            // var rightX = parseInt(svg.attr('width')) - 2 * BALL_RADIUS - 1;
-                            // var bottomY = parseInt(svg.attr('height')) - 2 * BALL_RADIUS - 1;
-                            // var initialSpeed = 15 + Math.random() * 8;
+                            var angleOfAttack = Math.PI + Math.PI / 2 + (Math.random() * Math.PI) / 3;
+                            var rightX = parseInt(svg.attr('width')) - 2 * BALL_RADIUS - 1;
+                            var bottomY = parseInt(svg.attr('height')) - 2 * BALL_RADIUS - 1;
+                            var initialSpeed = 15 + Math.random() * 8;
 
-                            // var vx = Math.cos(angleOfAttack) * initialSpeed; // velocity x
-                            // var vy = Math.sin(angleOfAttack) * initialSpeed; // velocity y
+                            var vx = Math.cos(angleOfAttack) * initialSpeed; // velocity x
+                            var vy = Math.sin(angleOfAttack) * initialSpeed; // velocity y
 
-                            // balls.push(new Ball(svg, rightX, bottomY, globalBallCount++, BALL_RADIUS, vx, vy));
+                            balls.push(new Ball(svg, rightX, bottomY, globalBallCount++, BALL_RADIUS, vx, vy));
                             numberBallsToPush = 0;
                         }
                     }
@@ -433,26 +429,16 @@ function OnNumberOfBallsChanged() {
 //=========Trying to set goals on screen====================
 //==========================================================
 function drawText() {
-    var textCircleGroup = svg.append("g").attr('id','textCircleGroup');
+    var svgContainer = d3.select("body").append("svg")
+        .attr("width", 200)
+        .attr("height", 200);
 
-    textCircleGroup.append('circle')
-        .attr({
-            id: 'textCircle',
-            class: 'ball',
-            r: 100,
-            cx: 50,
-            cy: 50,
-            weight: 30,
-            transform: 'translate(' + parseInt(svg.attr('width') - 100) + ',' + 50 + ')'
-        })
-        .style('fill', '#fff');
-
-    textCircleGroup.append("text")
-        .attr("fill", "black")
-        .attr('transform', 'translate(' + parseInt(svg.attr('width') - 50) + ',' + 50 + ')')
-        .attr("font-size",'20px')
-        .text(goalObject.goalText);
-    
+    //Add the SVG Text Element to the svgContainer
+    var text = svgContainer.selectAll("text")
+        .data(goalObject.goalText)
+        .enter()
+        .append("text");
+    console.log(goalObject.goalText);
 }
 //after here just have to display it on the screen on the svg already created, now it is showing on the left edge
 //I was thinking right edge
