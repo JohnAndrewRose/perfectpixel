@@ -1359,6 +1359,7 @@ var OverlayView = Backbone.View.extend({
         //     .css('left', this.model.get('x') + 'px')
         //     .css('top', this.model.get('y') + 'px')
         //     .css('opacity', this.model.get('opacity'));
+        defs.selectAll('pattern').remove();
         globalImageCount = 0;
         this.model.collection.models.forEach(model => {
             model.image.getImageUrlAsync(
