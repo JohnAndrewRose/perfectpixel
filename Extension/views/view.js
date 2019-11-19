@@ -119,28 +119,18 @@ function Ball(svg, x, y, number, weight, initialVx, initialVy) {
 
     this.Remove = function () {
         var svg = thisobj.svg;
-        var ball = svg.selectAll("circle")
+        var ball = svg.selectAll('#n' + thisobj.number)
             .data(thisobj.data)
         ball.transition()
             .duration(500)
-            .attr('r', 0);
-        ball.remove();
+            .attr('r', 0)
+            .remove();
         document.removeEventListener('click', this.handleClick, true);
     }
 
-    var secondsToImpulseConversionConstant = 10;
     var globalGravityConstant = 0.3;
     var ballPlasticityConstant = 1;
     var ballFrictionConstant = 0.1;
-
-    this.Impulse = function (upwardImpulseStrength) {
-        if(upwardImpulseStrength > 200) {
-            upwardImpulseStrength = 200;
-        }
-        if(!thisobj.lastIsUnderMouse) {
-            thisobj.vy -= upwardImpulseStrength / secondsToImpulseConversionConstant;
-        }
-    }
 
     this.Move = function () {
         var svg = thisobj.svg;
@@ -345,6 +335,8 @@ function ProcessCollision(ball1, ball2) {
     }
 }
 
+const DEMO_SPEED = 10;
+
 function StartStopGame() {
     if (startStopFlag == null) {
         d3.timer(function () {
@@ -362,15 +354,16 @@ function StartStopGame() {
         setInterval(function() {
             ExtensionService.sendMessage({ type: PP_RequestType.GetElapsedTimeOnDomain }, function (secondsOnDomainToday) {
                 var numberBallsToPush = 0;
+                secondsOnDomainToday -= 30 / DEMO_SPEED;
                 while(secondsOnDomainToday > 0) {
                     ++numberBallsToPush;
-                    secondsOnDomainToday -= 30;
+                    secondsOnDomainToday -= 30 / DEMO_SPEED;
                 }
-                while(numberBallsToPush > 0 && balls.length < 1) {
+                while(numberBallsToPush > 0 && balls.length < 10) {
                     var angleOfAttack = Math.PI + Math.PI/2 + Math.random() * Math.PI/3;
                     var rightX = parseInt(svg.attr('width')) - 2 * BALL_RADIUS - 1;
                     var bottomY = parseInt(svg.attr('height')) - 2 * BALL_RADIUS - 1;
-                    var initialSpeed = 15 + Math.random() * 8;
+                    var initialSpeed = 10 + numberBallsToPush + Math.random() * 8;
 
                     var vx = Math.cos(angleOfAttack) * initialSpeed; // velocity x
                     var vy = Math.sin(angleOfAttack) * initialSpeed; // velocity y            
@@ -379,7 +372,7 @@ function StartStopGame() {
                     numberBallsToPush--;
                 }
             });
-        }, 5000)
+        }, 30000 / DEMO_SPEED)
         startStopFlag = 1;
         //document.getElementById('startStop').innerHTML = 'Stop';
     }
