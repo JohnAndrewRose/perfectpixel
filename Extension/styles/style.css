@@ -595,6 +595,15 @@ img.chromeperfectpixel-overlay {
     border-bottom:1px dotted;
 }
 
+input[type=checkbox]
+{
+  -webkit-appearance:checkbox;
+}
+
+
+
+
+
 /* Adding the styling for the bubble*/
 .ball {
   /*display: inline-block;
