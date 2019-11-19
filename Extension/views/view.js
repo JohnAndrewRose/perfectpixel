@@ -32,6 +32,7 @@ var lastMouseX = 0;
 var lastMouseY = 0;
 var globalBallCount = 0;
 var globalImageCount = 0;
+var goalObject = {};
 // I always like to handle ESC key
 d3.select('body').on('keydown', function() {
     if (balls.length == 0) return;
@@ -365,7 +366,7 @@ function StartStopGame() {
                             var angleOfAttack = Math.PI + Math.PI / 2 + (Math.random() * Math.PI) / 3;
                             var rightX = parseInt(svg.attr('width')) - 2 * BALL_RADIUS - 1;
                             var bottomY = parseInt(svg.attr('height')) - 2 * BALL_RADIUS - 1;
-                            var initialSpeed = 10 + numberBallsToPush + Math.random() * 8;
+                            var initialSpeed = 15 + Math.random() * 8;
 
                             var vx = Math.cos(angleOfAttack) * initialSpeed; // velocity x
                             var vy = Math.sin(angleOfAttack) * initialSpeed; // velocity y
@@ -424,12 +425,6 @@ function OnNumberOfBallsChanged() {
 //==========================================================
 //=========Trying to set goals on screen====================
 //==========================================================
-function getTimeonSites() {
-    ExtensionService.sendMessage({ type: PP_RequestType.GetElapsedTimeOnDomain }, function(secondsOnDomainToday) {
-        console.log(secondsOnDomainToday);
-    });
-}
-
 var PanelView = Backbone.View.extend({
     tagName: 'div',
     className: 'chromeperfectpixel-panel',
@@ -454,7 +449,7 @@ var PanelView = Backbone.View.extend({
         'dblclick #chromeperfectpixel-panel-header': 'panelHeaderDoubleClick',
         'click #chromeperfectpixel-header-logo': 'panelHeaderDoubleClick',
         'click #chromeperfectpixel-closeNotification': 'closeCurrentNotification',
-        'click .chromeperfectpixel-getText': 'getText'
+        'click #saveGoals': 'saveGoals'
     },
 
     initialize: function(options) {
@@ -494,7 +489,20 @@ var PanelView = Backbone.View.extend({
             }
             view.togglePanelShown();
         });
-    },
+
+        setInterval(function() {
+            ExtensionService.sendMessage({ type: PP_RequestType.GetGoals }, function(goals) {
+                if(goals.timestamp > goalObject.timestamp || goalObject === undefined || goalObject.timestamp === undefined) {
+                    Object.assign(goalObject, goals);
+                    document.getElementById('myTextarea').value = goalObject.goalText;
+                    document.getElementById('youtubeGoal').value = goalObject.youtubeGoal;
+                    document.getElementById('amazonGoal').value = goalObject.amazonGoal;
+                    document.getElementById('redditGoal').value = goalObject.redditGoal;
+                    document.getElementById('facebookGoal').value = goalObject.facebookGoal;
+                }
+            });
+        }, 1000);
+},
 
     updatePanel: function(obj) {
         this.$el.toggleClass('hidden', obj.attributes.hidden);
@@ -580,10 +588,15 @@ var PanelView = Backbone.View.extend({
         PerfectPixel.toggleOverlayShown();
     },
 
-    getText: function() {
-        let text = document.getElementById('myTextarea').value;
-        console.log(text);
-        return text;
+    saveGoals: function() {
+        goalObject = {};
+        goalObject.goalText = document.getElementById('myTextarea').value;
+        goalObject.youtubeGoal = document.getElementById('youtubeGoal').value;
+        goalObject.amazonGoal = document.getElementById('amazonGoal').value;
+        goalObject.redditGoal = document.getElementById('redditGoal').value;
+        goalObject.facebookGoal = document.getElementById('facebookGoal').value;
+        goalObject.timestamp = new Date();
+        ExtensionService.sendMessage({ type: PP_RequestType.SetGoals, goals: goalObject });
     },
 
     toggleOverlayLocked: function(ev) {
@@ -883,11 +896,11 @@ var PanelView = Backbone.View.extend({
             '<div class="row">' +
             '<div class="col">' +
             '<h2>Set your goals:</h2><br>' +
-            'Facebook: <input type="number" id="fb" name="min" value="0" min="0" style="width: 3em"> min<br>' +
-            'Amazon: <input type="number" id="am" name="min" value="0" min="0" style="width: 3em"> min<br>' +
-            'Youtube: <input type="number" id="yt" name="min" value="0" min="0" style="width: 3em"> min<br>' +
-            'Reddit: <input type="number" id="rd" name="min" value="0" min="0" style="width: 3em"> min<br>' +
-            '<button onclick="" type="submit" style="width:40px;height:15px;">Save</button><br><br>' +
+            'Facebook: <input type="number" id="facebookGoal" name="min" value="0" min="0" style="width: 3em"> min<br>' +
+            'Amazon: <input type="number" id="amazonGoal" name="min" value="0" min="0" style="width: 3em"> min<br>' +
+            'Youtube: <input type="number" id="youtubeGoal" name="min" value="0" min="0" style="width: 3em"> min<br>' +
+            'Reddit: <input type="number" id="redditGoal" name="min" value="0" min="0" style="width: 3em"> min<br>' +
+            '<button id="saveGoals" type="submit" style="width:40px;height:15px;">Save</button><br><br>' +
             //'Total Procrastination: <input type="text" id="total" name="total" value="0" min="0" style="width: 3em"> min<br>' +
             '</div>' +
             '<div class="col">' +
@@ -900,7 +913,6 @@ var PanelView = Backbone.View.extend({
             '<textarea  id="myTextarea" rows="4" cols="10" placeholder="Type your goals here...">' +
             '</textarea><br>' +
             '</form>' +
-            '<div class="ui-button ui-widget ui-state-default ui-corner-all ui-button-text-only chromeperfectpixel-getText" style="width:60px;height:15px;">Set Goals</div><br><br>' +
             '<p id="demo"></p>' +
             //'<a href="javascript:void(0)" onclick="var f=document.getElementById(\'downFileForm\');if(f){f.submit();}">Text</a>' +
             '</div>' +

@@ -86,6 +86,7 @@ function get_days_since_epoch() {
 var prev_browser_focused = false;
 var secondsOnCurrentDomain = 0;
 var timeOnSitesData = {};
+var siteGoals = {};
 setInterval(
     chrome.windows.getCurrent(function(browser) {
         focused = browser.focused;
@@ -422,6 +423,12 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
         sendResponse(id);
     } else if (request.type == PP_RequestType.GetElapsedTimeOnDomain) {
         sendResponse(timeOnSitesData);
+    } else if (request.type == PP_RequestType.GetGoals) {
+        sendResponse(siteGoals);
+    } else if (request.type == PP_RequestType.SetGoals) {
+        if(request.goals && (siteGoals === undefined || siteGoals.timeStamp === undefined || request.goals.timestamp > siteGoals.timestamp)) {
+            Object.assign(siteGoals, request.goals);
+        }
     }
 
     return true;

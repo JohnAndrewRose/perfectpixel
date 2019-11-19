@@ -84,6 +84,8 @@ var PP_RequestType = new function () {
     this.ExecuteScript = "EXECUTESCRIPT";
     this.OpenSettingsPage = "OPENSETTINGSPAGE";
     this.GetElapsedTimeOnDomain = "ELAPSEDSECONDSONDOMAIN";
+    this.SetGoals = "SETGOALS";
+    this.GetGoals = "GETGOALS";
 };
 
 var badSites = new function () {
